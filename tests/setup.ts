@@ -1,9 +1,45 @@
 /// <reference types="jest" />
 
 jest.mock('react-native-reanimated', () => {
-  const Reanimated = require('react-native-reanimated/mock');
-  Reanimated.default.call = () => {};
-  return Reanimated;
+  const { View, Text, Image, ScrollView, FlatList } = require('react-native');
+  const sharedValue = (initial: any) => ({ value: initial, _isSharedValue: true });
+  return {
+    default: {
+      View,
+      Text,
+      Image,
+      ScrollView,
+      FlatList,
+      call: () => {},
+      createAnimatedComponent: (c: any) => c,
+    },
+    View,
+    Text,
+    Image,
+    ScrollView,
+    FlatList,
+    useSharedValue: sharedValue,
+    useDerivedValue: sharedValue,
+    useAnimatedStyle: (cb: any) => (typeof cb === 'function' ? cb() : {}),
+    useAnimatedProps: jest.fn(() => ({})),
+    useAnimatedRef: sharedValue,
+    useAnimatedScrollHandler: jest.fn(() => ({})),
+    useAnimatedReaction: jest.fn(),
+    useWorkletCallback: jest.fn(),
+    useAnimatedKeyboard: jest.fn(() => ({ height: 0, state: 0 })),
+    withSpring: (v: any) => v,
+    withTiming: (v: any) => v,
+    withRepeat: jest.fn((v: any) => v),
+    withSequence: jest.fn(),
+    withDecay: jest.fn(),
+    interpolate: jest.fn(),
+    interpolateColor: jest.fn(),
+    Extrapolate: { CLAMP: 'clamp', EXTEND: 'extend', IDENTITY: 'identity' },
+    runOnUI: (fn: any) => fn,
+    runOnJS: (fn: any) => fn,
+    useAnimatedSensor: jest.fn(() => ({ sensor: 0, data: null })),
+    Easing: { linear: (v: any) => v, ease: (v: any) => v, bezier: () => (v: any) => v },
+  };
 });
 
 jest.mock('expo-symbols', () => ({
