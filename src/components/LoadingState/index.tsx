@@ -8,7 +8,7 @@ interface LoadingStateProps {
 export default function LoadingState({ size = 'large' }: LoadingStateProps) {
   return (
     <View style={styles.container}>
-      <ActivityIndicator size={size} color={colors.primary} />
+      <ActivityIndicator size={size} color={colors.primary} testID="loading-indicator" />
     </View>
   );
 }

@@ -15,9 +15,10 @@ interface AvatarProps {
   uri?: string;
   name?: string;
   size?: AvatarSize;
+  accessibilityLabel?: string;
 }
 
-export default function Avatar({ uri, name, size = 'md' }: AvatarProps) {
+export default function Avatar({ uri, name, size = 'md', accessibilityLabel }: AvatarProps) {
   const dimension = sizeMap[size];
   const initials = name
     ?.split(' ')
@@ -42,9 +43,13 @@ export default function Avatar({ uri, name, size = 'md' }: AvatarProps) {
           ]}
           contentFit="cover"
           transition={200}
+          accessible
+          accessibilityLabel={accessibilityLabel}
         />
       ) : (
         <View
+          accessible
+          accessibilityLabel={accessibilityLabel}
           style={[
             styles.fallback,
             { width: dimension, height: dimension, borderRadius: radius.full },
