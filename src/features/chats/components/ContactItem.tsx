@@ -16,12 +16,14 @@ export default function ContactItem({ user, onPress }: ContactItemProps) {
   return (
     <Pressable
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Chat with ${user.name}`}
       style={({ pressed }) => [
         styles.container,
         pressed && styles.pressed,
       ]}
     >
-      <Avatar uri={user.avatar} name={user.name} size="md" />
+      <Avatar uri={user.avatar} name={user.name} size="md" accessibilityLabel={user.name} />
       <View style={styles.info}>
         <AppText variant="body" style={styles.name}>
           {user.name}

@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 
 export default function TabsLayout() {
   return (
@@ -16,14 +17,18 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Chats',
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, focused }) => (
+            <SymbolView name={focused ? 'message.fill' : 'message'} tintColor={color} size={24} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, focused }) => (
+            <SymbolView name={focused ? 'gearshape.fill' : 'gearshape'} tintColor={color} size={24} />
+          ),
         }}
       />
     </Tabs>
