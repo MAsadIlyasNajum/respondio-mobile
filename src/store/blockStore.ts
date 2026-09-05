@@ -1,25 +1,27 @@
 import { create } from 'zustand';
 
 interface BlockStore {
-  blockedIds: Set<string>;
-  blockUser: (id: string) => void;
+  blockedUsers: Map<string, string>;
+  blockUser: (id: string, name: string) => void;
   unblockUser: (id: string) => void;
   isBlocked: (id: string) => boolean;
+  getUserName: (id: string) => string | undefined;
 }
 
 export const useBlockStore = create<BlockStore>((set, get) => ({
-  blockedIds: new Set(),
-  blockUser: (id) =>
+  blockedUsers: new Map(),
+  blockUser: (id, name) =>
     set((state) => {
-      const next = new Set(state.blockedIds);
-      next.add(id);
-      return { blockedIds: next };
+      const next = new Map(state.blockedUsers);
+      next.set(id, name);
+      return { blockedUsers: next };
     }),
   unblockUser: (id) =>
     set((state) => {
-      const next = new Set(state.blockedIds);
+      const next = new Map(state.blockedUsers);
       next.delete(id);
-      return { blockedIds: next };
+      return { blockedUsers: next };
     }),
-  isBlocked: (id) => get().blockedIds.has(id),
+  isBlocked: (id) => get().blockedUsers.has(id),
+  getUserName: (id) => get().blockedUsers.get(id),
 }));

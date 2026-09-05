@@ -1,4 +1,5 @@
-import { FlatList, View, StyleSheet, type ListRenderItemInfo } from 'react-native';
+import { useRef } from 'react';
+import { FlatList, View, StyleSheet, type ListRenderItemInfo, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import LoadingState from '@/components/LoadingState';
 import EmptyState from '@/components/EmptyState';
 import ErrorState from '@/components/ErrorState';
@@ -16,6 +17,8 @@ interface MessageListProps {
   onRetryMessage?: (clientMessageId: string, text: string) => void;
 }
 
+const SCROLL_NEAR_BOTTOM_THRESHOLD = 150;
+
 export default function MessageList({
   messages,
   currentUserId,
@@ -26,6 +29,32 @@ export default function MessageList({
   onRefresh,
   onRetryMessage,
 }: MessageListProps) {
+  const flatListRef = useRef<FlatList<Message>>(null);
+  const hasInitiallyScrolled = useRef(false);
+  const isNearBottom = useRef(true);
+  const contentHeightRef = useRef(0);
+  const layoutHeightRef = useRef(0);
+
+  const handleContentSizeChange = (_width: number, height: number) => {
+    contentHeightRef.current = height;
+    if (!hasInitiallyScrolled.current && messages.length > 0) {
+      flatListRef.current?.scrollToEnd({ animated: false });
+      hasInitiallyScrolled.current = true;
+    } else if (hasInitiallyScrolled.current && isNearBottom.current) {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }
+  };
+
+  const handleLayout = (_event: { nativeEvent: { layout: { height: number } } }) => {
+    layoutHeightRef.current = _event.nativeEvent.layout.height;
+  };
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    const maxOffset = contentSize.height - layoutMeasurement.height;
+    isNearBottom.current = maxOffset <= 0 || contentOffset.y >= maxOffset - SCROLL_NEAR_BOTTOM_THRESHOLD;
+  };
+
   if (isLoading && !isFetching && messages.length === 0) {
     return <LoadingState />;
   }
@@ -35,6 +64,7 @@ export default function MessageList({
       <ErrorState
         message="Unable to load messages."
         onRetry={onRefresh}
+        retryAccessibilityLabel="Retry loading messages"
       />
     );
   }
@@ -68,6 +98,7 @@ export default function MessageList({
 
   return (
     <FlatList
+      ref={flatListRef}
       style={styles.list}
       contentContainerStyle={styles.content}
       data={messages}
@@ -76,6 +107,10 @@ export default function MessageList({
       renderItem={renderItem}
       onRefresh={onRefresh}
       refreshing={isFetching}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+      onContentSizeChange={handleContentSizeChange}
+      onLayout={handleLayout}
       ListFooterComponent={isFetching ? <LoadingState size="small" /> : null}
       ListEmptyComponent={<View style={styles.spacer} />}
     />
@@ -88,7 +123,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
   },
   spacer: {
     flex: 1,

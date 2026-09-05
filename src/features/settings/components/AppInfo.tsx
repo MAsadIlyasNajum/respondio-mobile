@@ -1,15 +1,39 @@
 import Constants from 'expo-constants';
+import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, spacing, radius } from '@/theme';
+import { radius, spacing, useColors } from '@/theme';
 import AppText from '@/components/AppText';
 
 const version = Constants.expoConfig?.version ?? Constants.manifest?.version ?? '1.0.0';
 const appName = Constants.expoConfig?.name ?? 'Respondio Mobile';
 
 export default function AppInfo() {
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        card: {
+          backgroundColor: colors.surface,
+          borderRadius: radius.md,
+          padding: spacing[4],
+          gap: spacing[2],
+        },
+        title: {
+          color: colors.text,
+        },
+        version: {
+          color: colors.secondaryText,
+        },
+        description: {
+          color: colors.secondaryText,
+        },
+      }),
+    [colors]
+  );
+
   return (
     <View style={styles.card}>
-      <AppText variant="heading" style={styles.title}>
+      <AppText variant="heading" accessibilityRole="header" style={styles.title}>
         {appName}
       </AppText>
       <AppText variant="body" style={styles.version}>
@@ -21,21 +45,3 @@ export default function AppInfo() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing[4],
-    gap: spacing[2],
-  },
-  title: {
-    color: colors.text,
-  },
-  version: {
-    color: colors.secondaryText,
-  },
-  description: {
-    color: colors.secondaryText,
-  },
-});

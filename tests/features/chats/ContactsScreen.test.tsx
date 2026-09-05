@@ -99,6 +99,30 @@ describe('ChatsScreen', () => {
     expect(mockRefetch).toHaveBeenCalled();
   });
 
+  it('shows error banner above list when data exists and fetch fails', () => {
+    const mockUsers = [
+      { id: 2, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+    ];
+    const mockRefetch = jest.fn();
+    mockedUseContacts.mockReturnValue({
+      users: mockUsers,
+      isLoading: false,
+      isError: true,
+      isRefetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      refetch: mockRefetch,
+    });
+
+    render(<ChatsScreen />);
+
+    expect(screen.getByText('Unable to refresh contacts.')).toBeTruthy();
+    expect(screen.getByText('Alice')).toBeTruthy();
+    fireEvent.press(screen.getByText('Retry'));
+    expect(mockRefetch).toHaveBeenCalled();
+  });
+
   it('calls router.push when a contact is tapped', () => {
     const mockUsers = [
       { id: 1, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },

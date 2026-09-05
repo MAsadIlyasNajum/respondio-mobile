@@ -12,7 +12,7 @@ const mockPush = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useBlockStore.setState({ blockedIds: new Set() });
+  useBlockStore.setState({ blockedUsers: new Map() });
   jest.mocked(useRouter).mockReturnValue({
     push: mockPush,
     replace: jest.fn(),
@@ -36,11 +36,11 @@ describe('SettingsScreen', () => {
   });
 
   it('renders blocked user ids when store is populated', () => {
-    useBlockStore.setState({ blockedIds: new Set(['2', '3']) });
+    useBlockStore.setState({ blockedUsers: new Map([['2', 'Bob'], ['3', 'Charlie']]) });
 
     render(<SettingsScreen />);
 
-    expect(screen.getByText('User #2')).toBeTruthy();
-    expect(screen.getByText('User #3')).toBeTruthy();
+    expect(screen.getByText('Bob')).toBeTruthy();
+    expect(screen.getByText('Charlie')).toBeTruthy();
   });
 });

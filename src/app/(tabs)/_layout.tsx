@@ -1,18 +1,25 @@
+import { useMemo } from 'react';
 import { Tabs } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
+import { useColors } from '@/theme';
 
 export default function TabsLayout() {
+  const colors = useColors();
+  const screenOptions = useMemo(
+    () => ({
+      headerShown: false,
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.secondaryText,
+      tabBarStyle: {
+        borderTopColor: colors.border,
+        backgroundColor: colors.background,
+      },
+    }),
+    [colors]
+  );
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#208AEF',
-        tabBarInactiveTintColor: '#6B7280',
-        tabBarStyle: {
-          borderTopColor: '#E5E7EB',
-        },
-      }}
-    >
+    <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{

@@ -68,12 +68,16 @@ export const useCreateMessage = (userId: string | number) => {
       queryClient.setQueryData<PaginatedResponse<Message>>(queryKey, (old) => ({
         ...(old ?? { total: 0, limit: 0, offset: 0, results: [] }),
         results: (old?.results ?? []).map((m) =>
-          m.clientMessageId === vars.clientMessageId ? (serverPost as Message) : m
+          m.clientMessageId === vars.clientMessageId
+            ? { ...(serverPost as Message), clientMessageId: vars.clientMessageId }
+            : m
         ),
       }));
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
+    onSettled: (_data, err) => {
+      if (err) {
+        queryClient.invalidateQueries({ queryKey });
+      }
     },
   });
 };

@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useBlockStore } from '@/store/blockStore';
 import { fetchUsers } from '@/api/users';
+import { CURRENT_USER_ID } from '@/utils/constants';
 import type { User } from '@/types/User';
 
 export interface UseContactsResult {
@@ -15,7 +16,7 @@ export interface UseContactsResult {
 }
 
 export const useContacts = (limit = 20): UseContactsResult => {
-  const blockedIds = useBlockStore((state) => state.blockedIds);
+  const blockedUsers = useBlockStore((state) => state.blockedUsers);
 
   const query = useInfiniteQuery({
     queryKey: ['users', { limit }],
@@ -29,7 +30,10 @@ export const useContacts = (limit = 20): UseContactsResult => {
   });
 
   const allUsers = query.data?.pages.flatMap((page) => page.results) ?? [];
-  const users = allUsers.filter((user) => !blockedIds.has(String(user.id)));
+  const users = allUsers.filter(
+    (user) =>
+      !blockedUsers.has(String(user.id)) && user.id !== CURRENT_USER_ID,
+  );
 
   return {
     users,

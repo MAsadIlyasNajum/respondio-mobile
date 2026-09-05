@@ -1,15 +1,10 @@
+import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
-import { colors, radius } from '@/theme';
+import { radius, avatarSizes, useColors } from '@/theme';
 import AppText from '@/components/AppText';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
-
-const sizeMap = {
-  sm: 32,
-  md: 40,
-  lg: 56,
-};
 
 interface AvatarProps {
   uri?: string;
@@ -19,7 +14,30 @@ interface AvatarProps {
 }
 
 export default function Avatar({ uri, name, size = 'md', accessibilityLabel }: AvatarProps) {
-  const dimension = sizeMap[size];
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          overflow: 'hidden',
+          backgroundColor: colors.surface,
+        },
+        image: {
+          resizeMode: 'cover',
+        },
+        fallback: {
+          backgroundColor: colors.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        initials: {
+          color: colors.secondaryText,
+        },
+      }),
+    [colors]
+  );
+
+  const dimension = avatarSizes[size];
   const initials = name
     ?.split(' ')
     .map((n) => n[0])
@@ -63,21 +81,3 @@ export default function Avatar({ uri, name, size = 'md', accessibilityLabel }: A
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-  },
-  image: {
-    resizeMode: 'cover',
-  },
-  fallback: {
-    backgroundColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initials: {
-    color: colors.secondaryText,
-  },
-});

@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, spacing } from '@/theme';
-import AppText from '@/components/AppText';
 import { SymbolView } from 'expo-symbols';
+import { spacing, useColors } from '@/theme';
+import AppText from '@/components/AppText';
 import type { User } from '@/types/User';
 
 interface ProfileDetailsProps {
@@ -9,6 +10,32 @@ interface ProfileDetailsProps {
 }
 
 export default function ProfileDetails({ user }: ProfileDetailsProps) {
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          gap: spacing[4],
+        },
+        row: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[3],
+        },
+        textContainer: {
+          flex: 1,
+          gap: spacing[1],
+        },
+        label: {
+          color: colors.secondaryText,
+        },
+        value: {
+          color: colors.text,
+        },
+      }),
+    [colors]
+  );
+
   const address = [user.address.street, user.address.city, user.address.zipcode]
     .filter(Boolean)
     .join(', ');
@@ -24,8 +51,35 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
 }
 
 function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        row: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing[3],
+        },
+        textContainer: {
+          flex: 1,
+          gap: spacing[1],
+        },
+        label: {
+          color: colors.secondaryText,
+        },
+        value: {
+          color: colors.text,
+        },
+      }),
+    [colors]
+  );
   return (
-    <View style={styles.row}>
+    <View
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={`${label}, ${value}`}
+      style={styles.row}
+    >
       <SymbolView name={icon as any} size={18} tintColor={colors.secondaryText} />
       <View style={styles.textContainer}>
         <AppText variant="metadata" style={styles.label}>
@@ -38,24 +92,3 @@ function DetailRow({ icon, label, value }: { icon: string; label: string; value:
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    gap: spacing[4],
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[3],
-  },
-  textContainer: {
-    flex: 1,
-    gap: spacing[1],
-  },
-  label: {
-    color: colors.secondaryText,
-  },
-  value: {
-    color: colors.text,
-  },
-});

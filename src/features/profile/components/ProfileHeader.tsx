@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, spacing } from '@/theme';
+import { spacing, useColors } from '@/theme';
 import Avatar from '@/components/Avatar';
 import AppText from '@/components/AppText';
 import type { User } from '@/types/User';
@@ -9,6 +10,24 @@ interface ProfileHeaderProps {
 }
 
 export default function ProfileHeader({ user }: ProfileHeaderProps) {
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          alignItems: 'center',
+          gap: spacing[2],
+        },
+        name: {
+          color: colors.text,
+        },
+        username: {
+          color: colors.secondaryText,
+        },
+      }),
+    [colors]
+  );
+
   return (
     <View style={styles.container}>
       <Avatar
@@ -26,16 +45,3 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: spacing[2],
-  },
-  name: {
-    color: colors.text,
-  },
-  username: {
-    color: colors.secondaryText,
-  },
-});

@@ -73,7 +73,7 @@ describe('useCreateMessage', () => {
     expect(temp.userId).toBe(1);
   });
 
-  it('replaces the temp with the server message and invalidates on success', async () => {
+  it('replaces the temp with the server message without invalidating on success', async () => {
     const fakeClient = makeFakeClient(baseStore);
     mockedUseQueryClient.mockReturnValue(fakeClient as any);
     mockedUseMutation.mockReturnValue({ mutate: jest.fn(), isPending: false, isError: false } as any);
@@ -103,12 +103,12 @@ describe('useCreateMessage', () => {
       title: 'hello',
       body: 'hello',
     });
-    expect(fakeClient.invalidateQueries).toHaveBeenCalled();
+    expect(fakeClient.invalidateQueries).not.toHaveBeenCalled();
 
     const state = fakeClient.getQueryData();
     expect(state.results).toHaveLength(1);
     expect(state.results[0].id).toBe(999);
-    expect(state.results[0].clientMessageId).toBeUndefined();
+    expect(state.results[0].clientMessageId).toBe('cm-1');
   });
 
   it('keeps the message in a failed state on error', async () => {
@@ -136,6 +136,28 @@ describe('useCreateMessage', () => {
     expect(state.results[0]._optimistic).toBe(true);
     expect(state.results[0].clientMessageId).toBe('cm-1');
     expect(state.results[0].body).toBe('hello');
+  });
+
+  it('invalidates queries on error', async () => {
+    const fakeClient = makeFakeClient(baseStore);
+    mockedUseQueryClient.mockReturnValue(fakeClient as any);
+    mockedUseMutation.mockReturnValue({ mutate: jest.fn(), isPending: false, isError: false } as any);
+    mockedCreatePost.mockRejectedValue(new Error('Network error'));
+
+    renderHook(() => useCreateMessage(2));
+    const options = captureOptions();
+
+    await act(async () => {
+      const ctx = await options.onMutate({ text: 'hello', clientMessageId: 'cm-1' });
+      try {
+        await options.mutationFn({ text: 'hello', clientMessageId: 'cm-1' });
+      } catch (e) {
+        options.onError(e as any, { text: 'hello', clientMessageId: 'cm-1' }, ctx);
+        options.onSettled(undefined, e as any, { text: 'hello', clientMessageId: 'cm-1' }, ctx);
+      }
+    });
+
+    expect(fakeClient.invalidateQueries).toHaveBeenCalled();
   });
 
   it('reuses the same message (no duplicate) when retrying with the same clientMessageId', async () => {

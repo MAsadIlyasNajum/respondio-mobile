@@ -61,6 +61,22 @@ jest.mock('expo-router', () => ({
   useSegments: jest.fn(() => []),
 }));
 
+jest.mock('react-native-safe-area-context', () => {
+  const { View } = require('react-native');
+  const inset = { top: 0, right: 0, bottom: 0, left: 0 };
+  return {
+    SafeAreaProvider: View,
+    SafeAreaView: View,
+    SafeAreaInsetsContext: {
+      Consumer: ({ children }: any) => children(inset),
+      Provider: ({ children }: any) => children,
+    },
+    useSafeAreaInsets: jest.fn(() => inset),
+    useSafeAreaFrame: jest.fn(() => ({ x: 0, y: 0, width: 390, height: 844 })),
+    initialWindowMetrics: inset,
+  };
+});
+
 jest.mock('expo-constants', () => {
   const value = { version: '1.0.0', name: 'respondio-mobile' };
   return {

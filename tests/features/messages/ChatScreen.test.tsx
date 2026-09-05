@@ -40,7 +40,7 @@ const baseMessage = (id: number, body: string) => ({
 describe('ChatScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useBlockStore.setState({ blockedIds: new Set() });
+    useBlockStore.setState({ blockedUsers: new Map() });
     jest.mocked(useRouter).mockReturnValue({
       push: mockPush,
       replace: jest.fn(),
@@ -99,7 +99,7 @@ describe('ChatScreen', () => {
   });
 
   it('shows blocked banner and hides the composer when contact is blocked', () => {
-    useBlockStore.setState({ blockedIds: new Set(['2']) });
+    useBlockStore.setState({ blockedUsers: new Map([['2', 'Bob']]) });
 
     render(<ChatScreen />);
 
@@ -108,7 +108,7 @@ describe('ChatScreen', () => {
   });
 
   it('unblocks a contact and restores the composer', () => {
-    useBlockStore.setState({ blockedIds: new Set(['2']) });
+    useBlockStore.setState({ blockedUsers: new Map([['2', 'Bob']]) });
 
     render(<ChatScreen />);
 
@@ -123,5 +123,33 @@ describe('ChatScreen', () => {
 
     fireEvent.press(screen.getByLabelText('Open profile for Bob'));
     expect(mockPush).toHaveBeenCalledWith('/profile/2');
+  });
+
+  it('navigates back when the back button is tapped', () => {
+    const mockBack = jest.fn();
+    jest.mocked(useRouter).mockReturnValue({
+      push: mockPush,
+      replace: jest.fn(),
+      back: mockBack,
+      canGoBack: jest.fn(() => true),
+    } as any);
+
+    render(<ChatScreen />);
+
+    fireEvent.press(screen.getByLabelText('Back'));
+    expect(mockBack).toHaveBeenCalled();
+  });
+
+  it('header back button has hitSlop for accessibility', () => {
+    render(<ChatScreen />);
+    const back = screen.getByLabelText('Back');
+    expect(back.props.hitSlop).toBeDefined();
+    expect(back.props.accessibilityRole).toBe('button');
+  });
+
+  it('header block button has accessibility role and label', () => {
+    render(<ChatScreen />);
+    const block = screen.getByLabelText('Block Bob');
+    expect(block.props.accessibilityRole).toBe('button');
   });
 });

@@ -4,6 +4,7 @@ import { renderHook, waitFor, act } from '@testing-library/react-native';
 import { useContacts } from '@/features/chats/hooks/useContacts';
 import { useBlockStore } from '@/store/blockStore';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { CURRENT_USER_ID } from '@/utils/constants';
 
 jest.mock('@/api/users');
 jest.mock('@tanstack/react-query');
@@ -12,15 +13,15 @@ const mockedUseInfiniteQuery = jest.mocked(useInfiniteQuery);
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useBlockStore.setState({ blockedIds: new Set() });
+  useBlockStore.setState({ blockedUsers: new Map() });
 });
 
 describe('useContacts', () => {
   it('filters out blocked users from results', async () => {
     const mockUsers = [
-      { id: 1, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
-      { id: 2, name: 'Bob', username: 'bob', email: 'b@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
-      { id: 3, name: 'Charlie', username: 'charlie', email: 'c@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+      { id: 2, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+      { id: 3, name: 'Bob', username: 'bob', email: 'b@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+      { id: 4, name: 'Charlie', username: 'charlie', email: 'c@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
     ];
 
     mockedUseInfiniteQuery.mockReturnValue({
@@ -36,12 +37,38 @@ describe('useContacts', () => {
       isFetching: false,
     } as any);
 
-    useBlockStore.setState({ blockedIds: new Set(['2']) });
+    useBlockStore.setState({ blockedUsers: new Map([['3', 'Bob']]) });
 
     const { result } = renderHook(() => useContacts());
 
     expect(result.current.users).toHaveLength(2);
-    expect(result.current.users.map((u) => u.id)).not.toContain(2);
+    expect(result.current.users.map((u) => u.id)).not.toContain(3);
+  });
+
+  it('filters out the current user from results', async () => {
+    const mockUsers = [
+      { id: CURRENT_USER_ID, name: 'Me', username: 'me', email: 'me@self.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+      { id: 2, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+      { id: 3, name: 'Bob', username: 'bob', email: 'b@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+    ];
+
+    mockedUseInfiniteQuery.mockReturnValue({
+      data: { pages: [{ results: mockUsers }], pageParams: [0] },
+      isLoading: false,
+      isError: false,
+      isRefetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      refetch: jest.fn(),
+      isPending: false,
+      isFetching: false,
+    } as any);
+
+    const { result } = renderHook(() => useContacts());
+
+    expect(result.current.users).toHaveLength(2);
+    expect(result.current.users.map((u) => u.id)).not.toContain(CURRENT_USER_ID);
   });
 
   it('returns hasNextPage correctly', async () => {
