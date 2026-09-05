@@ -61,6 +61,15 @@ jest.mock('expo-router', () => ({
   useSegments: jest.fn(() => []),
 }));
 
+jest.mock('expo-constants', () => {
+  const value = { version: '1.0.0', name: 'respondio-mobile' };
+  return {
+    __esModule: true,
+    default: { expoConfig: value, manifest: value },
+    Constants: { expoConfig: value, manifest: value },
+  };
+});
+
 jest.mock('@tanstack/react-query', () => {
   const actual = jest.requireActual('@tanstack/react-query');
   return {

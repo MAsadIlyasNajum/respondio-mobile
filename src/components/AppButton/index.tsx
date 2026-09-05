@@ -1,11 +1,11 @@
 import { type ReactNode } from 'react';
-import { type GestureResponderEvent, Pressable, StyleSheet, View } from 'react-native';
+import { type GestureResponderEvent, Pressable, StyleSheet, View, type AccessibilityProps } from 'react-native';
 import { colors, radius, spacing, typography } from '@/theme';
 import AppText from '@/components/AppText';
 
 type Variant = 'primary' | 'outline' | 'ghost';
 
-interface AppButtonProps {
+interface AppButtonProps extends AccessibilityProps {
   title: string;
   onPress: (event: GestureResponderEvent) => void;
   variant?: Variant;
@@ -21,11 +21,18 @@ export default function AppButton({
   disabled = false,
   loading = false,
   icon,
+  accessibilityLabel,
+  accessibilityRole,
+  ...accessibilityRest
 }: AppButtonProps) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessible
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole={accessibilityRole}
+      {...accessibilityRest}
       style={({ pressed }) => [
         styles.base,
         variant === 'primary' && styles.primary,
