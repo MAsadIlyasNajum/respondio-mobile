@@ -8,4 +8,5 @@ export interface Post {
   createdAt: string;
   clientMessageId?: string;
   _optimistic?: boolean;
+  _failed?: boolean;
 }
