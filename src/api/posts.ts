@@ -2,9 +2,17 @@ import { api } from './client';
 import type { Post } from '@/types/Post';
 import type { PaginatedResponse } from '@/types/Api';
 
-export const fetchPosts = async ({ limit = 100 }: { limit?: number }) => {
+export const fetchPosts = async ({
+  userId,
+  limit = 50,
+  offset = 0,
+}: {
+  userId?: number;
+  limit?: number;
+  offset?: number;
+}) => {
   const { data } = await api.get<PaginatedResponse<Post>>('/api/posts', {
-    params: { _limit: limit, _page: 1 },
+    params: { userId, limit, offset },
   });
   return data;
 };

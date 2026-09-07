@@ -8,6 +8,32 @@ import ChatScreen from '@/app/chat/[userId]';
 import { useMessages } from '@/features/messages/hooks/useMessages';
 import { useCreateMessage } from '@/features/messages/hooks/useCreateMessage';
 
+jest.mock('react-native', () => {
+  const actual = jest.requireActual('react-native');
+  const React = require('react');
+  const MockedFlatList = React.forwardRef((props: any, ref: any) => {
+    let renderedChildren: any = null;
+    if (props.renderItem && props.data) {
+      renderedChildren = props.data.map((item: any, index: number) =>
+        React.createElement(
+          React.Fragment,
+          { key: item.clientMessageId ?? String(item.id) },
+          props.renderItem({ item, index } as any)
+        )
+      );
+    }
+    return React.createElement(actual.View, { ...props, ref, testID: 'flat-list' }, renderedChildren);
+  });
+  return new Proxy(actual, {
+    get(target: any, prop: string) {
+      if (prop === 'FlatList') {
+        return MockedFlatList;
+      }
+      return target[prop];
+    },
+  });
+});
+
 jest.mock('@/features/messages/hooks/useMessages');
 jest.mock('@/features/messages/hooks/useCreateMessage');
 jest.mock('expo-router');
@@ -40,7 +66,7 @@ const baseMessage = (id: number, body: string) => ({
 describe('ChatScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    useBlockStore.setState({ blockedIds: new Set() });
+    useBlockStore.setState({ blockedUsers: new Map() });
     jest.mocked(useRouter).mockReturnValue({
       push: mockPush,
       replace: jest.fn(),
@@ -57,6 +83,7 @@ describe('ChatScreen', () => {
       messages: [],
       isLoading: false,
       isError: false,
+      isRefetching: false,
       refetch: jest.fn(),
     });
     mockedUseCreateMessage.mockReturnValue({
@@ -71,6 +98,7 @@ describe('ChatScreen', () => {
       messages: [baseMessage(10, 'Hello there')],
       isLoading: false,
       isError: false,
+      isRefetching: false,
       refetch: jest.fn(),
     });
 
@@ -99,7 +127,7 @@ describe('ChatScreen', () => {
   });
 
   it('shows blocked banner and hides the composer when contact is blocked', () => {
-    useBlockStore.setState({ blockedIds: new Set(['2']) });
+    useBlockStore.setState({ blockedUsers: new Map([['2', 'Bob']]) });
 
     render(<ChatScreen />);
 
@@ -108,7 +136,7 @@ describe('ChatScreen', () => {
   });
 
   it('unblocks a contact and restores the composer', () => {
-    useBlockStore.setState({ blockedIds: new Set(['2']) });
+    useBlockStore.setState({ blockedUsers: new Map([['2', 'Bob']]) });
 
     render(<ChatScreen />);
 
@@ -123,5 +151,48 @@ describe('ChatScreen', () => {
 
     fireEvent.press(screen.getByLabelText('Open profile for Bob'));
     expect(mockPush).toHaveBeenCalledWith('/profile/2');
+  });
+
+  it('navigates back when the back button is tapped', () => {
+    const mockBack = jest.fn();
+    jest.mocked(useRouter).mockReturnValue({
+      push: mockPush,
+      replace: jest.fn(),
+      back: mockBack,
+      canGoBack: jest.fn(() => true),
+    } as any);
+
+    render(<ChatScreen />);
+
+    fireEvent.press(screen.getByLabelText('Back'));
+    expect(mockBack).toHaveBeenCalled();
+  });
+
+  it('header back button has hitSlop for accessibility', () => {
+    render(<ChatScreen />);
+    const back = screen.getByLabelText('Back');
+    expect(back.props.hitSlop).toBeDefined();
+    expect(back.props.accessibilityRole).toBe('button');
+  });
+
+  it('header block button has accessibility role and label', () => {
+    render(<ChatScreen />);
+    const block = screen.getByLabelText('Block Bob');
+    expect(block.props.accessibilityRole).toBe('button');
+  });
+
+  it('passes isRefetching to MessageList for refresh spinner', () => {
+    mockedUseMessages.mockReturnValue({
+      messages: [baseMessage(1, 'Hello')],
+      isLoading: false,
+      isError: false,
+      isRefetching: true,
+      refetch: jest.fn(),
+    });
+
+    render(<ChatScreen />);
+
+    const flatList = screen.getByTestId('flat-list');
+    expect(flatList.props.refreshing).toBe(true);
   });
 });

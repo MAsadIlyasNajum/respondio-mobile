@@ -7,6 +7,6 @@ export interface Post {
   category: string;
   createdAt: string;
   clientMessageId?: string;
-  _optimistic?: boolean;
-  _failed?: boolean;
+  _optimistic?: true;
+  _failed?: true;
 }

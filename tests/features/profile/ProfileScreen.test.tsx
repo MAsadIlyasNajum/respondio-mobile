@@ -26,7 +26,7 @@ const mockUser = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  useBlockStore.setState({ blockedIds: new Set() });
+  useBlockStore.setState({ blockedUsers: new Map() });
   jest.mocked(useRouter).mockReturnValue({
     push: jest.fn(),
     replace: jest.fn(),
@@ -102,7 +102,7 @@ describe('ProfileScreen', () => {
   });
 
   it('unblock restores state', () => {
-    useBlockStore.setState({ blockedIds: new Set(['2']) });
+    useBlockStore.setState({ blockedUsers: new Map([['2', 'Bob']]) });
     mockedUseProfile.mockReturnValue({
       user: mockUser,
       isLoading: false,
@@ -143,6 +143,21 @@ describe('ProfileScreen', () => {
 
     render(<ProfileScreen />);
 
-    expect(screen.getByText('Profile not available.')).toBeTruthy();
+    expect(screen.getByText('Invalid profile link.')).toBeTruthy();
+  });
+
+  it('differentiates empty state when userId is valid but user not found', () => {
+    jest.mocked(useLocalSearchParams).mockReturnValue({ userId: '999' });
+
+    mockedUseProfile.mockReturnValue({
+      user: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: jest.fn(),
+    });
+
+    render(<ProfileScreen />);
+
+    expect(screen.getByText('User not found.')).toBeTruthy();
   });
 });

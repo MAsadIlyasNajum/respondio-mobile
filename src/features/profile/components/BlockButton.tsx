@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, spacing } from '@/theme';
+import { spacing, useColors } from '@/theme';
 import AppButton from '@/components/AppButton';
 import { SymbolView } from 'expo-symbols';
 import { useBlockStore } from '@/store/blockStore';
@@ -11,7 +11,15 @@ interface BlockButtonProps {
 }
 
 export default function BlockButton({ userId, userName }: BlockButtonProps) {
-  const blocked = useBlockStore((s) => s.blockedIds.has(userId));
+  const colors = useColors();
+  const styles = StyleSheet.create({
+    confirmRow: {
+      flexDirection: 'row',
+      gap: spacing[3],
+    },
+  });
+
+  const blocked = useBlockStore((s) => s.blockedUsers.has(userId));
   const blockUser = useBlockStore((s) => s.blockUser);
   const unblockUser = useBlockStore((s) => s.unblockUser);
   const [confirming, setConfirming] = useState(false);
@@ -41,7 +49,7 @@ export default function BlockButton({ userId, userName }: BlockButtonProps) {
       clearTimeout(timerRef.current);
     }
     setConfirming(false);
-    blockUser(userId);
+    blockUser(userId, userName);
   };
 
   const handleCancel = () => {
@@ -57,7 +65,7 @@ export default function BlockButton({ userId, userName }: BlockButtonProps) {
         title={`Unblock ${userName}`}
         onPress={handleBlockPress}
         variant="primary"
-        icon={<SymbolView name="checkmark.circle" size={18} tintColor="#FFFFFF" />}
+        icon={<SymbolView name={{ ios: 'checkmark.circle', android: 'check_circle' }} size={18} tintColor={colors.onPrimary} />}
         accessibilityLabel={`Unblock ${userName}`}
       />
     );
@@ -88,16 +96,9 @@ export default function BlockButton({ userId, userName }: BlockButtonProps) {
       title={`Block ${userName}`}
       onPress={handleBlockPress}
       variant="outline"
-      icon={<SymbolView name="hand.raised" size={18} tintColor={colors.primary} />}
+      icon={<SymbolView name={{ ios: 'hand.raised', android: 'warning' }} size={18} tintColor={colors.primary} />}
       accessibilityLabel={`Block ${userName}`}
       accessibilityHint="Shows confirmation step before blocking"
     />
   );
 }
-
-const styles = StyleSheet.create({
-  confirmRow: {
-    flexDirection: 'row',
-    gap: spacing[3],
-  },
-});

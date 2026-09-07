@@ -1,5 +1,7 @@
 import { useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
 import { useContacts } from '@/features/chats/hooks/useContacts';
+import { useContactLastMessages } from '@/features/chats/hooks/useContactLastMessages';
 import ContactList from '@/features/chats/components/ContactList';
 import type { User } from '@/types/User';
 
@@ -16,9 +18,23 @@ export default function ChatsScreen() {
     refetch,
   } = useContacts();
 
-  const handleContactPress = (user: User) => {
-    router.push(`/chat/${user.id}`);
-  };
+  const contactIds = useMemo(() => users.map((user) => user.id), [users]);
+  const lastMessagesResults = useContactLastMessages(contactIds);
+
+  const lastMessages = useMemo(() => {
+    const map = new Map<number, ReturnType<typeof useContactLastMessages>[number]>();
+    lastMessagesResults.forEach((result) => {
+      map.set(result.contactId, result);
+    });
+    return map;
+  }, [lastMessagesResults]);
+
+  const handleContactPress = useCallback(
+    (user: User) => {
+      router.push(`/chat/${user.id}`);
+    },
+    [router]
+  );
 
   return (
     <ContactList
@@ -31,6 +47,7 @@ export default function ChatsScreen() {
       onRefresh={refetch}
       onFetchNextPage={fetchNextPage}
       onContactPress={handleContactPress}
+      lastMessages={lastMessages}
     />
   );
 }

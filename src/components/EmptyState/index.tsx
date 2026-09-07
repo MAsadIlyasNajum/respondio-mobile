@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
+import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { colors, spacing } from '@/theme';
+import { spacing, useColors } from '@/theme';
 import AppText from '@/components/AppText';
 
 interface EmptyStateProps {
@@ -11,6 +12,35 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({ icon, title, subtitle, action }: EmptyStateProps) {
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: spacing[5],
+          gap: spacing[3],
+        },
+        icon: {
+          marginBottom: spacing[3],
+        },
+        title: {
+          textAlign: 'center',
+          color: colors.text,
+        },
+        subtitle: {
+          textAlign: 'center',
+          color: colors.secondaryText,
+        },
+        action: {
+          marginTop: spacing[4],
+        },
+      }),
+    [colors]
+  );
+
   return (
     <View style={styles.container}>
       {icon && <View style={styles.icon}>{icon}</View>}
@@ -26,27 +56,3 @@ export default function EmptyState({ icon, title, subtitle, action }: EmptyState
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing[5],
-    gap: spacing[3],
-  },
-  icon: {
-    marginBottom: spacing[3],
-  },
-  title: {
-    textAlign: 'center',
-    color: colors.text,
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: colors.secondaryText,
-  },
-  action: {
-    marginTop: spacing[4],
-  },
-});

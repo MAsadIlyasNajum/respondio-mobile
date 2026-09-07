@@ -1,27 +1,62 @@
 import { useMemo } from 'react';
 import { View, StyleSheet, FlatList } from 'react-native';
-import { colors, spacing } from '@/theme';
+import { radius, spacing, useColors } from '@/theme';
 import AppText from '@/components/AppText';
 import AppButton from '@/components/AppButton';
 import EmptyState from '@/components/EmptyState';
 import { useBlockStore } from '@/store/blockStore';
 
-export default function BlockedUsersList() {
-  const blockedIds = useBlockStore((s) => s.blockedIds);
+interface BlockedUsersListProps {
+  ListHeaderComponent?: React.ReactElement | null;
+  ListFooterComponent?: React.ReactElement | null;
+}
+
+export default function BlockedUsersList({
+  ListHeaderComponent,
+  ListFooterComponent,
+}: BlockedUsersListProps) {
+  const colors = useColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        list: {
+          flex: 1,
+        },
+        content: {
+          flexGrow: 1,
+          paddingBottom: spacing[4],
+        },
+        row: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingVertical: spacing[3],
+          paddingHorizontal: spacing[4],
+          backgroundColor: colors.surface,
+          borderRadius: radius.md,
+        },
+        name: {
+          color: colors.text,
+        },
+        separator: {
+          height: spacing[2],
+        },
+      }),
+    [colors]
+  );
+
+  const blockedUsers = useBlockStore((s) => s.blockedUsers);
+  const getUserName = useBlockStore((s) => s.getUserName);
   const unblockUser = useBlockStore((s) => s.unblockUser);
 
   const sortedIds = useMemo(() => {
-    return Array.from(blockedIds).map(Number).sort((a, b) => a - b).map(String);
-  }, [blockedIds]);
-
-  if (sortedIds.length === 0) {
-    return <EmptyState title="No blocked users." />;
-  }
+    return Array.from(blockedUsers.keys()).map(Number).sort((a, b) => a - b).map(String);
+  }, [blockedUsers]);
 
   const renderItem = ({ item }: { item: string }) => (
     <View style={styles.row}>
       <AppText variant="body" style={styles.name}>
-        User #{item}
+        {getUserName(item) ?? item}
       </AppText>
       <AppButton
         title="Unblock"
@@ -34,29 +69,16 @@ export default function BlockedUsersList() {
 
   return (
     <FlatList
+      testID="blocked-flatlist"
       data={sortedIds}
       keyExtractor={(item) => item}
       renderItem={renderItem}
-      scrollEnabled={false}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ListHeaderComponent={ListHeaderComponent}
+      ListFooterComponent={ListFooterComponent}
+      ListEmptyComponent={<EmptyState title="No blocked users." />}
+      style={styles.list}
+      contentContainerStyle={styles.content}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing[3],
-    paddingHorizontal: spacing[4],
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-  },
-  name: {
-    color: colors.text,
-  },
-  separator: {
-    height: spacing[2],
-  },
-});

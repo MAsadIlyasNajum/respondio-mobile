@@ -1,5 +1,5 @@
 import { Text, type TextProps, StyleSheet } from 'react-native';
-import { colors, typography } from '@/theme';
+import { typography, useColors } from '@/theme';
 
 type Variant = keyof typeof typography;
 
@@ -14,13 +14,14 @@ export default function AppText({
   style,
   ...rest
 }: AppTextProps) {
+  const colors = useColors();
   const variantStyle = typography[variant];
   return (
     <Text
       style={[
         styles.base,
         variantStyle,
-        color !== undefined ? { color } : undefined,
+        color !== undefined ? { color } : { color: colors.text },
         style,
       ]}
       {...rest}
@@ -29,7 +30,5 @@ export default function AppText({
 }
 
 const styles = StyleSheet.create({
-  base: {
-    color: colors.text,
-  },
+  base: {},
 });
