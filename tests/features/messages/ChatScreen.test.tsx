@@ -8,6 +8,32 @@ import ChatScreen from '@/app/chat/[userId]';
 import { useMessages } from '@/features/messages/hooks/useMessages';
 import { useCreateMessage } from '@/features/messages/hooks/useCreateMessage';
 
+jest.mock('react-native', () => {
+  const actual = jest.requireActual('react-native');
+  const React = require('react');
+  const MockedFlatList = React.forwardRef((props: any, ref: any) => {
+    let renderedChildren: any = null;
+    if (props.renderItem && props.data) {
+      renderedChildren = props.data.map((item: any, index: number) =>
+        React.createElement(
+          React.Fragment,
+          { key: item.clientMessageId ?? String(item.id) },
+          props.renderItem({ item, index } as any)
+        )
+      );
+    }
+    return React.createElement(actual.View, { ...props, ref, testID: 'flat-list' }, renderedChildren);
+  });
+  return new Proxy(actual, {
+    get(target: any, prop: string) {
+      if (prop === 'FlatList') {
+        return MockedFlatList;
+      }
+      return target[prop];
+    },
+  });
+});
+
 jest.mock('@/features/messages/hooks/useMessages');
 jest.mock('@/features/messages/hooks/useCreateMessage');
 jest.mock('expo-router');
@@ -57,6 +83,7 @@ describe('ChatScreen', () => {
       messages: [],
       isLoading: false,
       isError: false,
+      isRefetching: false,
       refetch: jest.fn(),
     });
     mockedUseCreateMessage.mockReturnValue({
@@ -71,6 +98,7 @@ describe('ChatScreen', () => {
       messages: [baseMessage(10, 'Hello there')],
       isLoading: false,
       isError: false,
+      isRefetching: false,
       refetch: jest.fn(),
     });
 
@@ -151,5 +179,20 @@ describe('ChatScreen', () => {
     render(<ChatScreen />);
     const block = screen.getByLabelText('Block Bob');
     expect(block.props.accessibilityRole).toBe('button');
+  });
+
+  it('passes isRefetching to MessageList for refresh spinner', () => {
+    mockedUseMessages.mockReturnValue({
+      messages: [baseMessage(1, 'Hello')],
+      isLoading: false,
+      isError: false,
+      isRefetching: true,
+      refetch: jest.fn(),
+    });
+
+    render(<ChatScreen />);
+
+    const flatList = screen.getByTestId('flat-list');
+    expect(flatList.props.refreshing).toBe(true);
   });
 });

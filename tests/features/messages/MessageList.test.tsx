@@ -233,4 +233,18 @@ describe('MessageList', () => {
     fireEvent.press(screen.getByLabelText('Retry sending message'));
     expect(onRetryMessage).toHaveBeenCalledWith('cm-failed', 'Failed');
   });
+
+  it('shows refreshing spinner when isFetching is true', () => {
+    render(
+      <MessageList
+        messages={[baseMessage(1, 'Hello')]}
+        currentUserId={2}
+        isLoading={false}
+        isError={false}
+        isFetching={true}
+        onRefresh={jest.fn()}
+      />
+    );
+    expect(screen.getByTestId('flat-list').props.refreshing).toBe(true);
+  });
 });

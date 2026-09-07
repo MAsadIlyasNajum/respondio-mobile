@@ -4,6 +4,15 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { queryClient } from '@/api/client';
 import { ThemeProvider } from '@/theme';
+import { useAppForegroundRefetch } from '@/hooks/useAppForegroundRefetch';
+
+function Root() {
+  useAppForegroundRefetch();
+
+  return (
+    <Stack screenOptions={{ headerShown: false, gestureEnabled: true }} />
+  );
+}
 
 export default function RootLayout() {
   return (
@@ -11,7 +20,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <QueryClientProvider client={queryClient}>
-            <Stack screenOptions={{ headerShown: false, gestureEnabled: true }} />
+            <Root />
           </QueryClientProvider>
         </ThemeProvider>
       </SafeAreaProvider>

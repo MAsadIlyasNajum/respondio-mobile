@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, useColors } from '@/theme';
 import AppText from '@/components/AppText';
@@ -14,38 +14,40 @@ export default function SettingsScreen() {
     () =>
       StyleSheet.create({
         container: {
-          paddingTop: insets.top,
-          paddingHorizontal: spacing[4],
-          paddingBottom: spacing[4],
-          gap: spacing[5],
+          flex: 1,
           backgroundColor: colors.background,
-          flexGrow: 1,
-        },
-        section: {
-          gap: spacing[3],
+          paddingTop: Platform.OS === 'android' ? Math.max(insets.top, spacing[6]) : insets.top,
+          paddingHorizontal: spacing[4],
         },
         sectionTitle: {
           color: colors.text,
+          marginTop: spacing[5],
+          marginBottom: spacing[3],
+        },
+        footer: {
+          marginTop: spacing[5],
         },
       }),
     [colors, insets.top]
   );
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-      <AppInfo />
-      <View style={styles.section}>
-        <AppText variant="heading" style={styles.sectionTitle}>
-          Blocked users
-        </AppText>
-        <BlockedUsersList />
-      </View>
-      <View style={styles.section}>
-        <AboutText />
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      <BlockedUsersList
+        ListHeaderComponent={
+          <View>
+            <AppInfo />
+            <AppText variant="heading" style={styles.sectionTitle}>
+              Blocked users
+            </AppText>
+          </View>
+        }
+        ListFooterComponent={
+          <View style={styles.footer}>
+            <AboutText />
+          </View>
+        }
+      />
+    </View>
   );
 }

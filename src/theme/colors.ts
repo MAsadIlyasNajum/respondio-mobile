@@ -9,6 +9,8 @@ interface ColorTokens {
   success: string;
   messageOutgoing: string;
   messageIncoming: string;
+  messageOutgoingText: string;
+  messageIncomingText: string;
   onPrimary: string;
   onError: string;
 }
@@ -24,6 +26,8 @@ export const lightColors: ColorTokens = {
   success: '#10B981',
   messageOutgoing: '#208AEF',
   messageIncoming: '#F3F4F6',
+  messageOutgoingText: '#FFFFFF',
+  messageIncomingText: '#1A1A2E',
   onPrimary: '#FFFFFF',
   onError: '#FFFFFF',
 };
@@ -39,6 +43,8 @@ export const darkColors: ColorTokens = {
   success: '#34D399',
   messageOutgoing: '#4DA3FF',
   messageIncoming: '#222632',
+  messageOutgoingText: '#0F1115',
+  messageIncomingText: '#F2F4F7',
   onPrimary: '#0F1115',
   onError: '#0F1115',
 };

@@ -21,6 +21,10 @@ export default function AppInfo() {
         title: {
           color: colors.text,
         },
+        userName: {
+          color: colors.primary,
+          fontWeight: '600',
+        },
         version: {
           color: colors.secondaryText,
         },
@@ -35,6 +39,9 @@ export default function AppInfo() {
     <View style={styles.card}>
       <AppText variant="heading" accessibilityRole="header" style={styles.title}>
         {appName}
+      </AppText>
+      <AppText variant="body" style={styles.userName}>
+        Muhammad Asad Ilyas
       </AppText>
       <AppText variant="body" style={styles.version}>
         Version {version}

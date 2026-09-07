@@ -25,7 +25,7 @@ export default function TabsLayout() {
         options={{
           title: 'Chats',
           tabBarIcon: ({ color, focused }) => (
-            <SymbolView name={focused ? 'message.fill' : 'message'} tintColor={color} size={24} />
+            <SymbolView name={{ ios: focused ? 'message.fill' : 'message', android: 'message' }} tintColor={color} size={24} />
           ),
         }}
       />
@@ -34,7 +34,7 @@ export default function TabsLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, focused }) => (
-            <SymbolView name={focused ? 'gearshape.fill' : 'gearshape'} tintColor={color} size={24} />
+            <SymbolView name={{ ios: focused ? 'gearshape.fill' : 'gearshape', android: 'settings' }} tintColor={color} size={24} />
           ),
         }}
       />

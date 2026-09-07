@@ -24,8 +24,10 @@ describe('useContacts', () => {
       { id: 4, name: 'Charlie', username: 'charlie', email: 'c@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
     ];
 
+    useBlockStore.setState({ blockedUsers: new Map([['3', 'Bob']]) });
+
     mockedUseInfiniteQuery.mockReturnValue({
-      data: { pages: [{ results: mockUsers }], pageParams: [0] },
+      data: mockUsers.filter((u) => u.id !== 3),
       isLoading: false,
       isError: false,
       isRefetching: false,
@@ -36,8 +38,6 @@ describe('useContacts', () => {
       isPending: false,
       isFetching: false,
     } as any);
-
-    useBlockStore.setState({ blockedUsers: new Map([['3', 'Bob']]) });
 
     const { result } = renderHook(() => useContacts());
 
@@ -53,7 +53,7 @@ describe('useContacts', () => {
     ];
 
     mockedUseInfiniteQuery.mockReturnValue({
-      data: { pages: [{ results: mockUsers }], pageParams: [0] },
+      data: mockUsers.filter((u) => u.id !== CURRENT_USER_ID),
       isLoading: false,
       isError: false,
       isRefetching: false,
@@ -77,7 +77,7 @@ describe('useContacts', () => {
     ];
 
     mockedUseInfiniteQuery.mockReturnValue({
-      data: { pages: [{ results: mockUsers }], pageParams: [0] },
+      data: mockUsers,
       isLoading: false,
       isError: false,
       isRefetching: false,
@@ -98,7 +98,7 @@ describe('useContacts', () => {
     const mockFetchNextPage = jest.fn();
 
     mockedUseInfiniteQuery.mockReturnValue({
-      data: { pages: [{ results: [] }], pageParams: [0] },
+      data: [],
       isLoading: false,
       isError: false,
       isRefetching: false,
@@ -123,7 +123,7 @@ describe('useContacts', () => {
     const mockRefetch = jest.fn();
 
     mockedUseInfiniteQuery.mockReturnValue({
-      data: { pages: [{ results: [] }], pageParams: [0] },
+      data: [],
       isLoading: false,
       isError: false,
       isRefetching: false,

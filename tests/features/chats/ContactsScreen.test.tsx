@@ -3,12 +3,15 @@
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import ChatsScreen from '@/app/(tabs)/index';
 import { useContacts } from '@/features/chats/hooks/useContacts';
+import { useContactLastMessages } from '@/features/chats/hooks/useContactLastMessages';
 import { useRouter } from 'expo-router';
 
 jest.mock('@/features/chats/hooks/useContacts');
+jest.mock('@/features/chats/hooks/useContactLastMessages');
 jest.mock('expo-router');
 
 const mockedUseContacts = jest.mocked(useContacts);
+const mockedUseContactLastMessages = jest.mocked(useContactLastMessages);
 const mockPush = jest.fn();
 
 beforeEach(() => {
@@ -19,6 +22,7 @@ beforeEach(() => {
     back: jest.fn(),
     canGoBack: jest.fn(() => true),
   } as any);
+  mockedUseContactLastMessages.mockReturnValue([]);
 });
 
 describe('ChatsScreen', () => {
@@ -59,7 +63,7 @@ describe('ChatsScreen', () => {
 
     render(<ChatsScreen />);
 
-    expect(screen.getByTestId('loading-indicator')).toBeTruthy();
+    expect(screen.getByTestId('skeleton-list')).toBeTruthy();
   });
 
   it('shows empty state when no contacts after filtering', () => {

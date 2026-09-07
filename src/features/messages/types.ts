@@ -6,6 +6,7 @@ export interface UseMessagesResult {
   messages: Message[];
   isLoading: boolean;
   isError: boolean;
+  isRefetching: boolean;
   refetch: () => void;
 }
 

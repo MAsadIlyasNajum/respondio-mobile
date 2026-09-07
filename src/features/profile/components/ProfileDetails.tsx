@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView, SFSymbol, AndroidSymbol } from 'expo-symbols';
 import { spacing, useColors } from '@/theme';
 import AppText from '@/components/AppText';
 import type { User } from '@/types/User';
@@ -42,15 +42,15 @@ export default function ProfileDetails({ user }: ProfileDetailsProps) {
 
   return (
     <View style={styles.container}>
-      {user.email ? <DetailRow icon="envelope" label="Email" value={user.email} /> : null}
-      {user.phone ? <DetailRow icon="phone" label="Phone" value={user.phone} /> : null}
-      {user.website ? <DetailRow icon="globe" label="Website" value={user.website} /> : null}
-      {address ? <DetailRow icon="mappin.and.ellipse" label="Address" value={address} /> : null}
+      {user.email ? <DetailRow icon={{ ios: 'envelope', android: 'mail' }} label="Email" value={user.email} /> : null}
+      {user.phone ? <DetailRow icon={{ ios: 'phone', android: 'phone' }} label="Phone" value={user.phone} /> : null}
+      {user.website ? <DetailRow icon={{ ios: 'globe', android: 'globe' }} label="Website" value={user.website} /> : null}
+      {address ? <DetailRow icon={{ ios: 'mappin.and.ellipse', android: 'location_on' }} label="Address" value={address} /> : null}
     </View>
   );
 }
 
-function DetailRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function DetailRow({ icon, label, value }: { icon: { ios: SFSymbol; android: AndroidSymbol }; label: string; value: string }) {
   const colors = useColors();
   const styles = useMemo(
     () =>
@@ -80,7 +80,7 @@ function DetailRow({ icon, label, value }: { icon: string; label: string; value:
       accessibilityLabel={`${label}, ${value}`}
       style={styles.row}
     >
-      <SymbolView name={icon as any} size={18} tintColor={colors.secondaryText} />
+      <SymbolView name={icon} size={18} tintColor={colors.secondaryText} />
       <View style={styles.textContainer}>
         <AppText variant="metadata" style={styles.label}>
           {label}

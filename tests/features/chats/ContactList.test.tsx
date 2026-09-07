@@ -23,6 +23,8 @@ function ContactListProbe() {
 }
 
 describe('ContactList', () => {
+  const lastMessages = new Map<number, any>();
+
   it('shows loading state', () => {
     render(
       <ContactList
@@ -34,9 +36,10 @@ describe('ContactList', () => {
         hasNextPage={false}
         onRefresh={noop}
         onFetchNextPage={noop}
+        lastMessages={lastMessages}
       />
     );
-    expect(screen.getByTestId('loading-indicator')).toBeTruthy();
+    expect(screen.getByTestId('skeleton-list')).toBeTruthy();
   });
 
   it('renders default empty state when data is empty', () => {
@@ -50,6 +53,7 @@ describe('ContactList', () => {
         hasNextPage={false}
         onRefresh={noop}
         onFetchNextPage={noop}
+        lastMessages={lastMessages}
       />
     );
     expect(screen.getByText('No contacts available.')).toBeTruthy();
@@ -67,6 +71,7 @@ describe('ContactList', () => {
         onRefresh={noop}
         onFetchNextPage={noop}
         ListEmptyComponent={<ContactListProbe />}
+        lastMessages={lastMessages}
       />
     );
     expect(screen.getByTestId('custom-empty')).toBeTruthy();
@@ -83,6 +88,7 @@ describe('ContactList', () => {
         hasNextPage={false}
         onRefresh={noop}
         onFetchNextPage={noop}
+        lastMessages={lastMessages}
       />
     );
     const retry = screen.getByLabelText('Retry loading contacts');
@@ -104,6 +110,7 @@ describe('ContactList', () => {
         hasNextPage={false}
         onRefresh={refetch}
         onFetchNextPage={noop}
+        lastMessages={lastMessages}
       />
     );
     fireEvent.press(screen.getByLabelText('Retry loading contacts'));
@@ -121,9 +128,30 @@ describe('ContactList', () => {
         hasNextPage={false}
         onRefresh={noop}
         onFetchNextPage={noop}
+        lastMessages={lastMessages}
       />
     );
     expect(screen.getByText('Alice')).toBeTruthy();
     expect(screen.getByText('Bob')).toBeTruthy();
+  });
+
+  it('passes lastMessages through to ContactItem', () => {
+    const messages = new Map([
+      [1, { contactId: 1, message: { id: 1, userId: 2, title: 'Hi', body: 'Hi', tags: [], category: 'Chat', createdAt: '2026-09-04T12:00:00.000Z' }, timestamp: '12:00 PM', isLoading: false, isError: false }],
+    ]);
+    render(
+      <ContactList
+        data={[baseUser(1, 'Alice')]}
+        isLoading={false}
+        isError={false}
+        isRefetching={false}
+        isFetchingNextPage={false}
+        hasNextPage={false}
+        onRefresh={noop}
+        onFetchNextPage={noop}
+        lastMessages={messages}
+      />
+    );
+    expect(screen.getByText('Hi')).toBeTruthy();
   });
 });

@@ -105,7 +105,7 @@ export default function ProfileScreen() {
             Platform.OS !== 'android' && pressed && styles.iconPressed,
           ]}
         >
-          <SymbolView name="chevron.left" size={24} tintColor={colors.text} />
+          <SymbolView name={{ ios: 'chevron.left', android: 'chevron_left' }} size={24} tintColor={colors.text} />
         </Pressable>
         <AppText variant="heading" style={styles.headerTitle}>
           Profile

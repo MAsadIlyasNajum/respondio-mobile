@@ -43,4 +43,13 @@ describe('SettingsScreen', () => {
     expect(screen.getByText('Bob')).toBeTruthy();
     expect(screen.getByText('Charlie')).toBeTruthy();
   });
+
+  it('renders the blocked-users heading and about text around the list', () => {
+    useBlockStore.setState({ blockedUsers: new Map([['1', 'Alice']]) });
+
+    render(<SettingsScreen />);
+
+    expect(screen.getByText('Blocked users')).toBeTruthy();
+    expect(screen.getByText(/demo app/)).toBeTruthy();
+  });
 });

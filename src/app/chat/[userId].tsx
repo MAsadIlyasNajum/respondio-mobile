@@ -58,8 +58,8 @@ export default function ChatScreen() {
     enabled: Boolean(contactId),
   });
 
-  const { messages, isLoading, isError, refetch } = useMessages(userId);
-  const { mutate, isPending } = useCreateMessage(userId);
+  const { messages, isLoading, isError, isRefetching, refetch } = useMessages(userId);
+  const { mutate, isPending } = useCreateMessage(contactId);
 
   const handleSend = (text: string) => {
     const clientMessageId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
@@ -111,7 +111,7 @@ export default function ChatScreen() {
                 Platform.OS !== 'android' && pressed && styles.iconPressed,
               ]}
             >
-              <SymbolView name="chevron.left" size={24} tintColor={colors.text} />
+              <SymbolView name={{ ios: 'chevron.left', android: 'chevron_left' }} size={24} tintColor={colors.text} />
             </Pressable>
             <Pressable
               onPress={handleAvatarPress}
@@ -140,6 +140,7 @@ export default function ChatScreen() {
             onPress={handleToggleBlock}
             accessibilityRole="button"
             accessibilityLabel={blocked ? `Unblock ${contactName}` : `Block ${contactName}`}
+            accessibilityState={{ disabled: contactLoading }}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             android_ripple={{ color: 'rgba(0,0,0,0.06)', borderless: true }}
             style={({ pressed }) => [
@@ -148,7 +149,7 @@ export default function ChatScreen() {
             ]}
           >
             <SymbolView
-              name={blocked ? 'person.crop.circle.badge.checkmark' : 'person.crop.circle.badge.xmark'}
+              name={{ ios: blocked ? 'person.crop.circle.badge.checkmark' : 'person.crop.circle.badge.xmark', android: blocked ? 'verified' : 'cancel' }}
               size={24}
               tintColor={blocked ? colors.success : colors.error}
             />
@@ -178,6 +179,7 @@ export default function ChatScreen() {
           currentUserId={CURRENT_USER_ID}
           isLoading={isLoading}
           isError={isError}
+          isFetching={isRefetching}
           contactName={contact?.name}
           onRefresh={refetch}
           onRetryMessage={handleRetry}

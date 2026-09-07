@@ -73,7 +73,7 @@ describe('useCreateMessage', () => {
     expect(temp.userId).toBe(1);
   });
 
-  it('replaces the temp with the server message without invalidating on success', async () => {
+  it('replaces the temp with the server message and invalidates conversation on success', async () => {
     const fakeClient = makeFakeClient(baseStore);
     mockedUseQueryClient.mockReturnValue(fakeClient as any);
     mockedUseMutation.mockReturnValue({ mutate: jest.fn(), isPending: false, isError: false } as any);
@@ -103,7 +103,14 @@ describe('useCreateMessage', () => {
       title: 'hello',
       body: 'hello',
     });
-    expect(fakeClient.invalidateQueries).not.toHaveBeenCalled();
+
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'contact', '2'],
+    });
+
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'metadata', '2'],
+    });
 
     const state = fakeClient.getQueryData();
     expect(state.results).toHaveLength(1);
@@ -157,7 +164,15 @@ describe('useCreateMessage', () => {
       }
     });
 
-    expect(fakeClient.invalidateQueries).toHaveBeenCalled();
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'own'],
+    });
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'contact', '2'],
+    });
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'metadata', '2'],
+    });
   });
 
   it('reuses the same message (no duplicate) when retrying with the same clientMessageId', async () => {
@@ -194,5 +209,73 @@ describe('useCreateMessage', () => {
     expect(state.results[0].clientMessageId).toBe('cm-1');
     expect(state.results[0]._failed).toBe(true);
     expect(mockedCreatePost).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses query key ["conversation", "own"] for cache operations', async () => {
+    const fakeClient = makeFakeClient(baseStore);
+    mockedUseQueryClient.mockReturnValue(fakeClient as any);
+    mockedUseMutation.mockReturnValue({ mutate: jest.fn(), isPending: false, isError: false } as any);
+    mockedCreatePost.mockResolvedValue({
+      id: 999,
+      userId: 1,
+      title: 'hello',
+      body: 'hello',
+      tags: [],
+      category: 'Chat',
+      createdAt: '2026-09-04T10:35:04.854Z',
+    });
+
+    renderHook(() => useCreateMessage(8));
+
+    await act(async () => {
+      const options = captureOptions();
+      const ctx = await options.onMutate({ text: 'hello', clientMessageId: 'cm-1' });
+      const data = await options.mutationFn({ text: 'hello', clientMessageId: 'cm-1' });
+      options.onSuccess(data, { text: 'hello', clientMessageId: 'cm-1' }, ctx);
+      options.onSettled(data, null, { text: 'hello', clientMessageId: 'cm-1' }, ctx);
+    });
+
+    expect(fakeClient.setQueryData).toHaveBeenCalledWith(
+      ['conversation', 'own'],
+      expect.any(Function)
+    );
+
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'contact', '8'],
+    });
+
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'metadata', '8'],
+    });
+  });
+
+  it('invalidates conversation caches on error', async () => {
+    const fakeClient = makeFakeClient(baseStore);
+    mockedUseQueryClient.mockReturnValue(fakeClient as any);
+    mockedUseMutation.mockReturnValue({ mutate: jest.fn(), isPending: false, isError: false } as any);
+    mockedCreatePost.mockRejectedValue(new Error('Network error'));
+
+    renderHook(() => useCreateMessage(8));
+
+    await act(async () => {
+      const options = captureOptions();
+      const ctx = await options.onMutate({ text: 'hello', clientMessageId: 'cm-1' });
+      try {
+        await options.mutationFn({ text: 'hello', clientMessageId: 'cm-1' });
+      } catch (e) {
+        options.onError(e as any, { text: 'hello', clientMessageId: 'cm-1' }, ctx);
+        options.onSettled(undefined, e as any, { text: 'hello', clientMessageId: 'cm-1' }, ctx);
+      }
+    });
+
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'own'],
+    });
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'contact', '8'],
+    });
+    expect(fakeClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['conversation', 'metadata', '8'],
+    });
   });
 });

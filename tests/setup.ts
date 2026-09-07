@@ -97,10 +97,12 @@ jest.mock('@tanstack/react-query', () => {
         subscribe: jest.fn(),
       })),
       isFetching: jest.fn(() => 0),
+      invalidateQueries: jest.fn(),
     })),
     QueryClientProvider: jest.fn(({ children }) => children),
     useQuery: jest.fn(),
     useInfiniteQuery: jest.fn(),
     useQueryClient: jest.fn(),
+    useQueries: jest.fn(),
   };
 });

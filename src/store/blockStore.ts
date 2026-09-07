@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { queryClient } from '@/api/client';
 
 interface BlockStore {
   blockedUsers: Map<string, string>;
@@ -10,18 +11,22 @@ interface BlockStore {
 
 export const useBlockStore = create<BlockStore>((set, get) => ({
   blockedUsers: new Map(),
-  blockUser: (id, name) =>
+  blockUser: (id, name) => {
     set((state) => {
       const next = new Map(state.blockedUsers);
       next.set(id, name);
       return { blockedUsers: next };
-    }),
-  unblockUser: (id) =>
+    });
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+  },
+  unblockUser: (id) => {
     set((state) => {
       const next = new Map(state.blockedUsers);
       next.delete(id);
       return { blockedUsers: next };
-    }),
+    });
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+  },
   isBlocked: (id) => get().blockedUsers.has(id),
   getUserName: (id) => get().blockedUsers.get(id),
 }));

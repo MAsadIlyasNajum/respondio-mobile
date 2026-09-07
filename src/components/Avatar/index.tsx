@@ -60,6 +60,7 @@ export default function Avatar({ uri, name, size = 'md', accessibilityLabel }: A
             { width: dimension, height: dimension, borderRadius: radius.full },
           ]}
           contentFit="cover"
+          cachePolicy="memory-disk"
           transition={200}
           accessible
           accessibilityLabel={accessibilityLabel}

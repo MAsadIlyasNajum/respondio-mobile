@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   FlatList,
   View,
   StyleSheet,
   Pressable,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, useColors } from '@/theme';
@@ -11,8 +12,10 @@ import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import EmptyState from '@/components/EmptyState';
 import AppText from '@/components/AppText';
+import SkeletonRow from '@/components/SkeletonRow';
 import ContactItem from './ContactItem';
 import type { User } from '@/types/User';
+import type { ContactLastMessageResult } from '@/features/chats/hooks/useContactLastMessages';
 
 interface ContactListProps {
   data: User[];
@@ -27,6 +30,7 @@ interface ContactListProps {
   onEndReachedThreshold?: number;
   ListEmptyComponent?: React.ReactElement | null;
   ListHeaderComponent?: React.ReactElement | null;
+  lastMessages?: Map<number, ContactLastMessageResult>;
 }
 
 export default function ContactList({
@@ -42,6 +46,7 @@ export default function ContactList({
   onEndReachedThreshold = 0.5,
   ListEmptyComponent,
   ListHeaderComponent,
+  lastMessages,
 }: ContactListProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -51,7 +56,7 @@ export default function ContactList({
         wrapper: {
           flex: 1,
           backgroundColor: colors.background,
-          paddingTop: insets.top,
+          paddingTop: Platform.OS === 'android' ? Math.max(insets.top, spacing[6]) : insets.top,
         },
         list: {
           flex: 1,
@@ -60,10 +65,9 @@ export default function ContactList({
           flexGrow: 1,
         },
         separator: {
-          height: 1,
+          height: StyleSheet.hairlineWidth,
           backgroundColor: colors.border,
-          marginLeft: spacing[4],
-          marginRight: spacing[4],
+          marginHorizontal: spacing[4],
         },
         errorBanner: {
           flexDirection: 'row',
@@ -97,17 +101,60 @@ export default function ContactList({
     [colors, insets.top]
   );
 
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      onFetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, onFetchNextPage]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: User }) => {
+      const messageData = lastMessages?.get(item.id);
+      const messageStatus = messageData
+        ? messageData.isLoading
+          ? 'loading'
+          : messageData.isError
+            ? 'error'
+            : 'success'
+        : 'success';
+
+      return (
+        <ContactItem
+          user={item}
+          onPress={() => onContactPress?.(item)}
+          lastMessage={messageData?.message ?? null}
+          messageTimestamp={messageData?.timestamp ?? '—'}
+          messageStatus={messageStatus}
+        />
+      );
+    },
+    [onContactPress, lastMessages]
+  );
+
+  const renderSeparator = useCallback(
+    () => <View style={styles.separator} />,
+    [styles.separator]
+  );
+
   if (isLoading) {
     return (
-      <View style={[styles.wrapper, { paddingTop: insets.top }]}>
-        <LoadingState />
+      <View style={[styles.wrapper, { paddingTop: Platform.OS === 'android' ? Math.max(insets.top, spacing[6]) : insets.top }]}>
+        <AppText variant="screenTitle" style={styles.headerTitle}>
+          Chats
+        </AppText>
+        <View testID="skeleton-list">
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
+        </View>
       </View>
     );
   }
 
   if (isError && !isRefetching && data.length === 0) {
     return (
-      <View style={[styles.wrapper, { paddingTop: insets.top }]}>
+      <View style={[styles.wrapper, { paddingTop: Platform.OS === 'android' ? Math.max(insets.top, spacing[6]) : insets.top }]}>
         <ErrorState
           message="Unable to load contacts."
           onRetry={onRefresh}
@@ -148,20 +195,11 @@ export default function ContactList({
         contentContainerStyle={styles.content}
         data={data}
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }: { item: User }) => (
-          <ContactItem
-            user={item}
-            onPress={() => onContactPress?.(item)}
-          />
-        )}
-        ItemSeparatorComponent={ItemSeparator}
+        renderItem={renderItem}
+        ItemSeparatorComponent={renderSeparator}
         onRefresh={onRefresh}
         refreshing={isRefetching}
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            onFetchNextPage();
-          }
-        }}
+        onEndReached={handleEndReached}
         onEndReachedThreshold={onEndReachedThreshold}
         ListFooterComponent={
           isFetchingNextPage ? <LoadingState size="small" /> : null
@@ -175,14 +213,10 @@ export default function ContactList({
             />
           )
         }
+        windowSize={5}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
       />
     </View>
   );
 }
-
-const ItemSeparator = () => {
-  const colors = useColors();
-  return (
-    <View style={{ height: 1, backgroundColor: colors.border, marginHorizontal: spacing[4] }} />
-  );
-};

@@ -118,6 +118,7 @@ export default function MessageInput({
           textContentType="none"
           onSubmitEditing={handleSend}
           accessibilityLabel="Message text input"
+          accessibilityState={{ disabled: disabled || isPending }}
         />
         <Pressable
           onPress={handleSend}
@@ -127,12 +128,13 @@ export default function MessageInput({
           accessibilityRole="button"
           accessibilityLabel={isPending ? 'Sending message' : 'Send message'}
           accessibilityHint="Sends your message"
+          accessibilityState={{ disabled: sendDisabled, busy: isPending }}
           android_ripple={{ color: 'rgba(255,255,255,0.18)' }}
           style={styles.sendButton}
         >
           <Animated.View style={[styles.sendIcon, animatedStyle]}>
             <SymbolView
-              name={isPending ? 'hourglass' : 'arrow.up.right'}
+              name={{ ios: isPending ? 'hourglass' : 'arrow.up.right', android: isPending ? 'hourglass' : 'send' }}
               size={20}
               tintColor={sendDisabled ? colors.secondaryText : colors.onPrimary}
             />

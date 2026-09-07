@@ -65,7 +65,7 @@ export default function BlockButton({ userId, userName }: BlockButtonProps) {
         title={`Unblock ${userName}`}
         onPress={handleBlockPress}
         variant="primary"
-        icon={<SymbolView name="checkmark.circle" size={18} tintColor={colors.onPrimary} />}
+        icon={<SymbolView name={{ ios: 'checkmark.circle', android: 'check_circle' }} size={18} tintColor={colors.onPrimary} />}
         accessibilityLabel={`Unblock ${userName}`}
       />
     );
@@ -96,7 +96,7 @@ export default function BlockButton({ userId, userName }: BlockButtonProps) {
       title={`Block ${userName}`}
       onPress={handleBlockPress}
       variant="outline"
-      icon={<SymbolView name="hand.raised" size={18} tintColor={colors.primary} />}
+      icon={<SymbolView name={{ ios: 'hand.raised', android: 'warning' }} size={18} tintColor={colors.primary} />}
       accessibilityLabel={`Block ${userName}`}
       accessibilityHint="Shows confirmation step before blocking"
     />

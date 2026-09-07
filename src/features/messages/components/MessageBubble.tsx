@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { radius, spacing, useColors } from '@/theme';
@@ -10,22 +10,26 @@ interface MessageBubbleProps {
   message: Message;
   isOwn: boolean;
   contactName?: string;
+  isGrouped?: boolean;
+  isLastInGroup?: boolean;
   onRetry?: () => void;
 }
 
-export default function MessageBubble({
+const MessageBubble = ({
   message,
   isOwn,
   contactName,
+  isGrouped = false,
+  isLastInGroup = true,
   onRetry,
-}: MessageBubbleProps) {
+}: MessageBubbleProps) => {
   const colors = useColors();
   const styles = useMemo(
     () =>
       StyleSheet.create({
         row: {
           paddingHorizontal: spacing[4],
-          paddingVertical: spacing[1],
+          paddingVertical: isGrouped ? 0 : spacing[2],
           flexDirection: 'row',
         },
         rowOutgoing: {
@@ -52,13 +56,13 @@ export default function MessageBubble({
           opacity: 0.7,
         },
         text: {
-          marginBottom: spacing[1],
+          marginBottom: isLastInGroup ? spacing[1] : 0,
         },
         textOutgoing: {
-          color: colors.onPrimary,
+          color: colors.messageOutgoingText,
         },
         textIncoming: {
-          color: colors.text,
+          color: colors.messageIncomingText,
         },
         rowFooter: {
           flexDirection: 'row',
@@ -71,7 +75,7 @@ export default function MessageBubble({
           color: colors.secondaryText,
         },
         timeOutgoing: {
-          color: colors.onPrimary,
+          color: colors.messageOutgoingText,
           opacity: 0.8,
         },
         retry: {
@@ -81,7 +85,7 @@ export default function MessageBubble({
           opacity: 0.5,
         },
       }),
-    [colors]
+    [colors, isGrouped, isLastInGroup]
   );
 
   const failed = !!message._failed;
@@ -117,29 +121,33 @@ export default function MessageBubble({
         >
           {message.body}
         </AppText>
-        <View style={styles.rowFooter}>
-          <AppText
-            variant="caption"
-            style={[styles.time, isOwn && styles.timeOutgoing]}
-          >
-            {timestamp}
-          </AppText>
-          {failed && onRetry && (
-            <Pressable
-              onPress={onRetry}
-              accessibilityRole="button"
-              accessibilityLabel="Retry sending message"
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={({ pressed }) => [
-                styles.retry,
-                Platform.OS !== 'android' && pressed && styles.retryPressed,
-              ]}
+        {isLastInGroup && (
+          <View style={styles.rowFooter}>
+            <AppText
+              variant="timestamp"
+              style={[styles.time, isOwn && styles.timeOutgoing]}
             >
-              <SymbolView name="arrow.clockwise" size={18} tintColor={colors.error} />
-            </Pressable>
-          )}
-        </View>
+              {timestamp}
+            </AppText>
+            {failed && onRetry && (
+              <Pressable
+                onPress={onRetry}
+                accessibilityRole="button"
+                accessibilityLabel="Retry sending message"
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                style={({ pressed }) => [
+                  styles.retry,
+                  Platform.OS !== 'android' && pressed && styles.retryPressed,
+                ]}
+              >
+                <SymbolView name={{ ios: 'arrow.clockwise', android: 'refresh' }} size={18} tintColor={colors.error} />
+              </Pressable>
+            )}
+          </View>
+        )}
       </View>
     </View>
   );
-}
+};
+
+export default memo(MessageBubble);

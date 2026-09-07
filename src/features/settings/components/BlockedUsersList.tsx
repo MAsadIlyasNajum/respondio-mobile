@@ -6,11 +6,26 @@ import AppButton from '@/components/AppButton';
 import EmptyState from '@/components/EmptyState';
 import { useBlockStore } from '@/store/blockStore';
 
-export default function BlockedUsersList() {
+interface BlockedUsersListProps {
+  ListHeaderComponent?: React.ReactElement | null;
+  ListFooterComponent?: React.ReactElement | null;
+}
+
+export default function BlockedUsersList({
+  ListHeaderComponent,
+  ListFooterComponent,
+}: BlockedUsersListProps) {
   const colors = useColors();
   const styles = useMemo(
     () =>
       StyleSheet.create({
+        list: {
+          flex: 1,
+        },
+        content: {
+          flexGrow: 1,
+          paddingBottom: spacing[4],
+        },
         row: {
           flexDirection: 'row',
           alignItems: 'center',
@@ -38,10 +53,6 @@ export default function BlockedUsersList() {
     return Array.from(blockedUsers.keys()).map(Number).sort((a, b) => a - b).map(String);
   }, [blockedUsers]);
 
-  if (sortedIds.length === 0) {
-    return <EmptyState title="No blocked users." />;
-  }
-
   const renderItem = ({ item }: { item: string }) => (
     <View style={styles.row}>
       <AppText variant="body" style={styles.name}>
@@ -63,6 +74,11 @@ export default function BlockedUsersList() {
       keyExtractor={(item) => item}
       renderItem={renderItem}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
+      ListHeaderComponent={ListHeaderComponent}
+      ListFooterComponent={ListFooterComponent}
+      ListEmptyComponent={<EmptyState title="No blocked users." />}
+      style={styles.list}
+      contentContainerStyle={styles.content}
     />
   );
 }

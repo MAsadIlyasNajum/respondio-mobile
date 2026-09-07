@@ -1,19 +1,21 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { spacing, useColors } from '@/theme';
 import Avatar from '@/components/Avatar';
 import AppText from '@/components/AppText';
+import { formatConversationTime } from '@/utils/format';
+import type { User } from '@/types/User';
+import type { Post } from '@/types/Post';
 
 interface ContactItemProps {
-  user: {
-    id: number;
-    name: string;
-    avatar: string;
-  };
-  onPress: (event: any) => void;
+  user: User;
+  onPress: () => void;
+  lastMessage?: Post | null;
+  messageTimestamp?: string;
+  messageStatus: 'loading' | 'error' | 'success';
 }
 
-export default function ContactItem({ user, onPress }: ContactItemProps) {
+function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStatus }: ContactItemProps) {
   const colors = useColors();
   const styles = useMemo(
     () =>
@@ -34,8 +36,16 @@ export default function ContactItem({ user, onPress }: ContactItemProps) {
           flex: 1,
           gap: spacing[1],
         },
+        row: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+        },
         name: {
           color: colors.text,
+        },
+        timestamp: {
+          color: colors.secondaryText,
         },
         placeholder: {
           color: colors.secondaryText,
@@ -43,6 +53,24 @@ export default function ContactItem({ user, onPress }: ContactItemProps) {
       }),
     [colors]
   );
+
+  const messageText =
+    messageStatus === 'loading'
+      ? '...'
+      : messageStatus === 'error'
+        ? 'Unable to load message'
+        : lastMessage?.body ?? 'No messages yet';
+
+  const timestampText =
+    messageStatus === 'loading'
+      ? '...'
+      : messageStatus === 'error'
+        ? '—'
+        : messageTimestamp
+          ? messageTimestamp
+          : lastMessage?.createdAt
+            ? formatConversationTime(lastMessage.createdAt)
+            : '—';
 
   return (
     <Pressable
@@ -57,13 +85,20 @@ export default function ContactItem({ user, onPress }: ContactItemProps) {
     >
       <Avatar uri={user.avatar} name={user.name} size="md" accessibilityLabel={user.name} />
       <View style={styles.info}>
-        <AppText variant="body" style={styles.name}>
-          {user.name}
-        </AppText>
-        <AppText variant="caption" style={styles.placeholder}>
-          Tap to start chatting
+        <View style={styles.row}>
+          <AppText variant="body" style={styles.name} numberOfLines={1}>
+            {user.name}
+          </AppText>
+          <AppText variant="metadata" style={styles.timestamp}>
+            {timestampText}
+          </AppText>
+        </View>
+        <AppText variant="caption" style={styles.placeholder} numberOfLines={1}>
+          {messageText}
         </AppText>
       </View>
     </Pressable>
   );
 }
+
+export default memo(ContactItem);

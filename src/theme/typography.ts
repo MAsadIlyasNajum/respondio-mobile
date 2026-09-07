@@ -5,4 +5,5 @@ export const typography = {
   caption: { fontSize: 13, fontWeight: '400' },
   button: { fontSize: 16, fontWeight: '600' },
   metadata: { fontSize: 12, fontWeight: '400' },
+  timestamp: { fontSize: 11, fontWeight: '400' },
 } as const;
