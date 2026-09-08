@@ -1040,13 +1040,21 @@ This provides visibility into implementation progress and keeps the assessment w
 
 ---
 
-# Release
+# Release & Download
 
-The application release and APK are available through GitHub Releases:
+The application is available as a downloadable Android APK.
 
-**[View Releases](https://github.com/MAsadIlyasNajum/respondio-mobile/releases)**
+### 📱 Android APK
 
-Version tags are available here:
+**[Download / Install the App](https://expo.dev/accounts/asad95/projects/respondio-mobile/builds/ca8f697f-422f-4fac-a92c-35ce596db96a)**
+
+The Expo build link provides direct access to the generated Android build. This is intended to make evaluation easier for reviewers and interviewers — no local React Native or Expo setup is required to try the application.
+
+### GitHub Release
+
+**[View GitHub Releases](https://github.com/MAsadIlyasNajum/respondio-mobile/releases)**
+
+### Version Tags
 
 **[View Tags](https://github.com/MAsadIlyasNajum/respondio-mobile/tags)**
 
