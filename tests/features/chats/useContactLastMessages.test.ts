@@ -24,15 +24,19 @@ const basePost = (overrides: Partial<Record<string, any>> & {
   userId: number;
   body: string;
   createdAt: string;
-}) => ({
-  id: overrides.id,
-  userId: overrides.userId,
-  title: overrides.body,
-  body: overrides.body,
-  tags: [],
-  category: 'Chat',
-  createdAt: overrides.createdAt,
-});
+}) => {
+  const { id, userId, body, createdAt, ...rest } = overrides;
+  return {
+    id,
+    userId,
+    title: body,
+    body,
+    tags: [],
+    category: 'Chat',
+    createdAt,
+    ...rest,
+  };
+};
 
 const contactQueryResult = (posts: any[]) => ({
   data: posts.length > 0 ? posts[0] : null,
@@ -198,7 +202,7 @@ describe('useContactLastMessages', () => {
     expect(result.current[1].contactId).toBe(2);
   });
 
-  it('does not attribute outgoing posts to a contact because recipientId is unavailable', () => {
+  it('shows outgoing posts as the latest message when newer than incoming', () => {
     const incomingPost = basePost({
       id: 1,
       userId: 8,
@@ -220,8 +224,144 @@ describe('useContactLastMessages', () => {
 
     const { result } = renderHook(() => useContactLastMessages([8]));
 
-    expect(result.current[0].message?.body).toBe('incoming');
+    expect(result.current[0].message?.body).toBe('outgoing');
+    expect(result.current[0].message?.userId).toBe(1);
+  });
+
+  it('shows outgoing post when there is no incoming post', () => {
+    const outgoingPost = basePost({
+      id: 10,
+      userId: 1,
+      body: 'outgoing only',
+      createdAt: '2025-08-02T12:00:00.000Z',
+    });
+
+    mockedUseQueries.mockImplementation((options: any) => {
+      return options.queries.map(() => contactQueryResult([]));
+    });
+
+    mockedUseQuery.mockReturnValue(ownQueryResult([outgoingPost]));
+
+    const { result } = renderHook(() => useContactLastMessages([8]));
+
+    expect(result.current[0].message?.body).toBe('outgoing only');
+    expect(result.current[0].message?.userId).toBe(1);
+    expect(result.current[0].timestamp).not.toBe('—');
+  });
+
+  it('shows incoming post when it is newer than outgoing', () => {
+    const incomingPost = basePost({
+      id: 1,
+      userId: 8,
+      body: 'newer incoming',
+      createdAt: '2025-08-03T10:00:00.000Z',
+    });
+    const outgoingPost = basePost({
+      id: 10,
+      userId: 1,
+      body: 'older outgoing',
+      createdAt: '2025-08-01T12:00:00.000Z',
+    });
+
+    mockedUseQueries.mockImplementation((options: any) => {
+      return options.queries.map(() => contactQueryResult([incomingPost]));
+    });
+
+    mockedUseQuery.mockReturnValue(ownQueryResult([outgoingPost]));
+
+    const { result } = renderHook(() => useContactLastMessages([8]));
+
+    expect(result.current[0].message?.body).toBe('newer incoming');
     expect(result.current[0].message?.userId).toBe(8);
+  });
+
+  it('selects the newest message across multiple incoming and outgoing posts', () => {
+    const incomingPosts = [
+      basePost({ id: 1, userId: 8, body: 'incoming 1', createdAt: '2025-08-01T10:00:00.000Z' }),
+      basePost({ id: 3, userId: 8, body: 'incoming 2', createdAt: '2025-08-03T10:00:00.000Z' }),
+    ];
+    const outgoingPosts = [
+      basePost({ id: 10, userId: 1, body: 'outgoing 1', createdAt: '2025-08-02T12:00:00.000Z' }),
+      basePost({ id: 11, userId: 1, body: 'outgoing 2', createdAt: '2025-08-04T12:00:00.000Z' }),
+    ];
+
+    mockedUseQueries.mockImplementation((options: any) => {
+      return options.queries.map(() => contactQueryResult(incomingPosts));
+    });
+
+    mockedUseQuery.mockReturnValue(ownQueryResult(outgoingPosts));
+
+    const { result } = renderHook(() => useContactLastMessages([8]));
+
+    expect(result.current[0].message?.body).toBe('outgoing 2');
+    expect(result.current[0].message?.userId).toBe(1);
+  });
+
+  it('shows optimistic outgoing message as the latest', () => {
+    const optimisticPost = basePost({
+      id: 100,
+      userId: 1,
+      body: 'optimistic hello',
+      createdAt: new Date().toISOString(),
+      _optimistic: true,
+    });
+
+    mockedUseQueries.mockImplementation((options: any) => {
+      return options.queries.map(() => contactQueryResult([]));
+    });
+
+    mockedUseQuery.mockReturnValue(ownQueryResult([optimisticPost]));
+
+    const { result } = renderHook(() => useContactLastMessages([8]));
+
+    expect(result.current[0].message?.body).toBe('optimistic hello');
+    expect(result.current[0].message?._optimistic).toBe(true);
+    expect(result.current[0].timestamp).not.toBe('—');
+  });
+
+  it('shows reconciled server message after optimistic update', () => {
+    const serverPost = basePost({
+      id: 999,
+      userId: 1,
+      body: 'server hello',
+      createdAt: new Date().toISOString(),
+    });
+
+    mockedUseQueries.mockImplementation((options: any) => {
+      return options.queries.map(() => contactQueryResult([]));
+    });
+
+    mockedUseQuery.mockReturnValue(ownQueryResult([serverPost]));
+
+    const { result } = renderHook(() => useContactLastMessages([8]));
+
+    expect(result.current[0].message?.body).toBe('server hello');
+    expect(result.current[0].message?.id).toBe(999);
+    expect(result.current[0].timestamp).not.toBe('—');
+  });
+
+  it('shows failed message in preview without crashing', () => {
+    const failedPost = basePost({
+      id: 100,
+      userId: 1,
+      body: 'failed hello',
+      createdAt: new Date().toISOString(),
+      _optimistic: true,
+      _failed: true,
+    });
+
+    mockedUseQueries.mockImplementation((options: any) => {
+      return options.queries.map(() => contactQueryResult([]));
+    });
+
+    mockedUseQuery.mockReturnValue(ownQueryResult([failedPost]));
+
+    const { result } = renderHook(() => useContactLastMessages([8]));
+
+    expect(result.current[0].message?.body).toBe('failed hello');
+    expect(result.current[0].message?._failed).toBe(true);
+    expect(result.current[0].timestamp).not.toBe('—');
+    expect(result.current[0].isError).toBe(false);
   });
 
   it('returns null when both contact and own queries return empty', () => {

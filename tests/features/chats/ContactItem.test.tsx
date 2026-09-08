@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { act, render, screen, fireEvent } from '@testing-library/react-native';
 import ContactItem from '@/features/chats/components/ContactItem';
 import type { User } from '@/types/User';
 import type { Post } from '@/types/Post';
@@ -34,7 +34,7 @@ const basePost = (overrides: Partial<Post> & {
   return { ...post, ...overrides };
 };
 
-const noop = () => {};
+const noop = () => Promise.resolve();
 
 describe('ContactItem', () => {
   it('renders user name and avatar', () => {
@@ -118,5 +118,53 @@ describe('ContactItem', () => {
     );
     const loadingIndicators = screen.getAllByText('...');
     expect(loadingIndicators.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('ignores rapid repeated presses while navigation is in flight', async () => {
+    const onPress = jest.fn(() => Promise.resolve());
+    render(
+      <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
+    );
+    fireEvent.press(screen.getByText('Alice'));
+    fireEvent.press(screen.getByText('Alice'));
+    fireEvent.press(screen.getByText('Alice'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-enables contact after navigation completes', async () => {
+    let resolvePress = () => {};
+    const onPress = jest.fn(() => new Promise<void>((res) => { resolvePress = res; }));
+    render(
+      <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
+    );
+
+    fireEvent.press(screen.getByText('Alice'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolvePress();
+    });
+
+    fireEvent.press(screen.getByText('Alice'));
+    expect(onPress).toHaveBeenCalledTimes(2);
+  });
+
+  it('sets accessibilityState to disabled while navigating', async () => {
+    let resolvePress = () => {};
+    const onPress = jest.fn(() => new Promise<void>((res) => { resolvePress = res; }));
+    render(
+      <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
+    );
+
+    fireEvent.press(screen.getByLabelText('Chat with Alice'));
+    let button = screen.getByLabelText('Chat with Alice');
+    expect(button.props.accessibilityState.disabled).toBe(true);
+
+    await act(async () => {
+      resolvePress();
+    });
+
+    button = screen.getByLabelText('Chat with Alice');
+    expect(button.props.accessibilityState.disabled).toBe(false);
   });
 });

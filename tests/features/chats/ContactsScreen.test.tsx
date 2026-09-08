@@ -149,6 +149,40 @@ describe('ChatsScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/chat/1');
   });
 
+  it('does not push duplicate chat routes on rapid repeated taps', async () => {
+    const mockPush = jest.fn(() => Promise.resolve());
+    jest.mocked(useRouter).mockReturnValue({
+      push: mockPush,
+      replace: jest.fn(),
+      back: jest.fn(),
+      canGoBack: jest.fn(() => true),
+    } as any);
+
+    const mockUsers = [
+      { id: 1, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+    ];
+
+    mockedUseContacts.mockReturnValue({
+      users: mockUsers,
+      isLoading: false,
+      isError: false,
+      isRefetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      refetch: jest.fn(),
+    });
+
+    render(<ChatsScreen />);
+
+    fireEvent.press(screen.getByText('Alice'));
+    fireEvent.press(screen.getByText('Alice'));
+    fireEvent.press(screen.getByText('Alice'));
+
+    expect(mockPush).toHaveBeenCalledTimes(1);
+    expect(mockPush).toHaveBeenCalledWith('/chat/1');
+  });
+
   it('does not render blocked users', () => {
     const mockUsers = [
       { id: 1, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },

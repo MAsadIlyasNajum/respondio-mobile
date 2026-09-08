@@ -1,4 +1,4 @@
-import { useRef, useMemo, useCallback } from 'react';
+import { useRef, useMemo, useCallback, useEffect } from 'react';
 import { FlatList, View, StyleSheet, type ListRenderItemInfo, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import LoadingState from '@/components/LoadingState';
 import EmptyState from '@/components/EmptyState';
@@ -64,24 +64,33 @@ export default function MessageList({
   onRetryMessage,
 }: MessageListProps) {
   const flatListRef = useRef<FlatList<ListItem>>(null);
-  const hasInitiallyScrolled = useRef(false);
   const isNearBottom = useRef(true);
   const contentHeightRef = useRef(0);
   const layoutHeightRef = useRef(0);
   const prevMessagesLengthRef = useRef(0);
+  const scrolledForLengthRef = useRef(0);
 
   const listItems = useMemo(() => buildMessageList(messages), [messages]);
+
+  useEffect(() => {
+    if (messages.length > 0 && flatListRef.current && isNearBottom.current && messages.length !== scrolledForLengthRef.current) {
+      const hasNewMessages = messages.length > prevMessagesLengthRef.current;
+      const shouldAnimate = hasNewMessages && prevMessagesLengthRef.current > 0;
+      prevMessagesLengthRef.current = messages.length;
+      scrolledForLengthRef.current = messages.length;
+      flatListRef.current.scrollToEnd({ animated: shouldAnimate });
+    }
+  }, [messages.length]);
 
   const handleContentSizeChange = (_width: number, height: number) => {
     contentHeightRef.current = height;
     const hasNewMessages = messages.length > prevMessagesLengthRef.current;
+    const shouldAnimate = hasNewMessages && prevMessagesLengthRef.current > 0;
     prevMessagesLengthRef.current = messages.length;
 
-    if (!hasInitiallyScrolled.current && messages.length > 0) {
-      flatListRef.current?.scrollToEnd({ animated: false });
-      hasInitiallyScrolled.current = true;
-    } else if (hasInitiallyScrolled.current && isNearBottom.current && hasNewMessages) {
-      flatListRef.current?.scrollToEnd({ animated: true });
+    if (messages.length > 0 && isNearBottom.current && messages.length !== scrolledForLengthRef.current) {
+      scrolledForLengthRef.current = messages.length;
+      flatListRef.current?.scrollToEnd({ animated: shouldAnimate });
     }
   };
 

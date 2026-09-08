@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState, useRef, useCallback } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { spacing, useColors } from '@/theme';
 import Avatar from '@/components/Avatar';
@@ -9,7 +9,7 @@ import type { Post } from '@/types/Post';
 
 interface ContactItemProps {
   user: User;
-  onPress: () => void;
+  onPress: () => void | Promise<void>;
   lastMessage?: Post | null;
   messageTimestamp?: string;
   messageStatus: 'loading' | 'error' | 'success';
@@ -17,6 +17,18 @@ interface ContactItemProps {
 
 function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStatus }: ContactItemProps) {
   const colors = useColors();
+  const isNavigatingRef = useRef(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  const handlePress = useCallback(() => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    setIsNavigating(true);
+    Promise.resolve(onPress()).finally(() => {
+      isNavigatingRef.current = false;
+      setIsNavigating(false);
+    });
+  }, [onPress]);
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -31,6 +43,9 @@ function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStat
         pressed: {
           opacity: 0.7,
           backgroundColor: colors.surface,
+        },
+        navigating: {
+          opacity: 0.85,
         },
         info: {
           flex: 1,
@@ -74,13 +89,15 @@ function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStat
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={`Chat with ${user.name}`}
+      accessibilityState={{ disabled: isNavigating }}
       android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
       style={({ pressed }) => [
         styles.container,
         pressed && styles.pressed,
+        isNavigating && styles.navigating,
       ]}
     >
       <Avatar uri={user.avatar} name={user.name} size="md" accessibilityLabel={user.name} />
