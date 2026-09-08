@@ -52,13 +52,14 @@ The implementation focuses on more than simply rendering screens. The project se
 | Resource             | Link                                                                                |
 | -------------------- | ----------------------------------------------------------------------------------- |
 | **Source Code**      | [GitHub Repository](https://github.com/MAsadIlyasNajum/respondio-mobile)            |
+| **App Download**     | [Download Android APK](https://expo.dev/accounts/asad95/projects/respondio-mobile/builds/ca8f697f-422f-4fac-a92c-35ce596db96a) |
 | **Release & APK**    | [GitHub Releases](https://github.com/MAsadIlyasNajum/respondio-mobile/releases)     |
 | **Version Tags**     | [GitHub Tags](https://github.com/MAsadIlyasNajum/respondio-mobile/tags)             |
 | **Milestone**        | [GitHub Milestones](https://github.com/MAsadIlyasNajum/respondio-mobile/milestones) |
 | **Project Tracking** | [GitHub Project](https://github.com/MAsadIlyasNajum/respondio-mobile/projects/4)    |
 | **API**              | [ResponseRift](https://responserift.dev/)                                           |
 
-> **APK:** The Android APK is included in the repository/release as required by the assessment.
+> **APK:** The Android application can be downloaded directly from the Expo build link above. No local build is required for evaluation.
 
 ---
 
