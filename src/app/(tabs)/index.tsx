@@ -31,7 +31,7 @@ export default function ChatsScreen() {
 
   const handleContactPress = useCallback(
     (user: User) => {
-      router.push(`/chat/${user.id}`);
+      return router.push(`/chat/${user.id}`);
     },
     [router]
   );

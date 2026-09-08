@@ -1,6 +1,7 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState, useRef, useCallback } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { spacing, useColors } from '@/theme';
+import { useFocusEffect } from 'expo-router';
 import Avatar from '@/components/Avatar';
 import AppText from '@/components/AppText';
 import { formatConversationTime } from '@/utils/format';
@@ -17,6 +18,22 @@ interface ContactItemProps {
 
 function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStatus }: ContactItemProps) {
   const colors = useColors();
+  const isNavigatingRef = useRef(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      isNavigatingRef.current = false;
+      setIsNavigating(false);
+    }, [])
+  );
+
+  const handlePress = useCallback(() => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    setIsNavigating(true);
+    onPress();
+  }, [onPress]);
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -31,6 +48,9 @@ function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStat
         pressed: {
           opacity: 0.7,
           backgroundColor: colors.surface,
+        },
+        navigating: {
+          opacity: 0.85,
         },
         info: {
           flex: 1,
@@ -74,13 +94,15 @@ function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStat
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={`Chat with ${user.name}`}
+      accessibilityState={{ disabled: isNavigating }}
       android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
       style={({ pressed }) => [
         styles.container,
         pressed && styles.pressed,
+        isNavigating && styles.navigating,
       ]}
     >
       <Avatar uri={user.avatar} name={user.name} size="md" accessibilityLabel={user.name} />

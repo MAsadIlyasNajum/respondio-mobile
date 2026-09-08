@@ -26,7 +26,7 @@ interface ContactListProps {
   hasNextPage: boolean;
   onRefresh: () => void;
   onFetchNextPage: () => void;
-  onContactPress?: (user: User) => void;
+  onContactPress?: (user: User) => void | Promise<void>;
   onEndReachedThreshold?: number;
   ListEmptyComponent?: React.ReactElement | null;
   ListHeaderComponent?: React.ReactElement | null;
@@ -121,7 +121,7 @@ export default function ContactList({
       return (
         <ContactItem
           user={item}
-          onPress={() => onContactPress?.(item)}
+          onPress={async () => onContactPress?.(item)}
           lastMessage={messageData?.message ?? null}
           messageTimestamp={messageData?.timestamp ?? '—'}
           messageStatus={messageStatus}

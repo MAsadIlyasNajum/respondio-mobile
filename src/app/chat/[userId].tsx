@@ -175,6 +175,7 @@ export default function ChatScreen() {
         )}
 
         <MessageList
+          key={userId}
           messages={messages}
           currentUserId={CURRENT_USER_ID}
           isLoading={isLoading}

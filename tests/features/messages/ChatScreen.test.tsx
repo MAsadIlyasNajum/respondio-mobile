@@ -12,6 +12,17 @@ jest.mock('react-native', () => {
   const actual = jest.requireActual('react-native');
   const React = require('react');
   const MockedFlatList = React.forwardRef((props: any, ref: any) => {
+    const mergeRef = (instance: any) => {
+      if (typeof ref === 'function') {
+        ref(instance);
+      } else if (ref) {
+        ref.current = instance;
+      }
+      if (instance) {
+        instance.scrollToEnd = jest.fn();
+      }
+    };
+
     let renderedChildren: any = null;
     if (props.renderItem && props.data) {
       renderedChildren = props.data.map((item: any, index: number) =>
@@ -22,7 +33,7 @@ jest.mock('react-native', () => {
         )
       );
     }
-    return React.createElement(actual.View, { ...props, ref, testID: 'flat-list' }, renderedChildren);
+    return React.createElement(actual.View, { ...props, ref: mergeRef, testID: 'flat-list' }, renderedChildren);
   });
   return new Proxy(actual, {
     get(target: any, prop: string) {

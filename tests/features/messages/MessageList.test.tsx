@@ -42,16 +42,6 @@ jest.mock('react-native', () => {
       props.onLayout({ nativeEvent: { layout: { height: 400, width: 300, x: 0, y: 0 } } });
     }
 
-    if (props.onScroll) {
-      props.onScroll({
-        nativeEvent: {
-          contentOffset: { y: 550 },
-          layoutMeasurement: { height: 400, width: 300, x: 0, y: 0 },
-          contentSize: { height: 1000, width: 300 },
-        },
-      } as any);
-    }
-
     return React.createElement(actualRN.View, { ...props, ref: mergeRef, testID: 'flat-list' }, renderedChildren);
   });
 
@@ -169,6 +159,42 @@ describe('MessageList', () => {
     expect(mockScrollToEnd).toHaveBeenCalledWith({ animated: false });
   });
 
+  it('scrolls to end when reopening chat with same cached data (remount)', () => {
+    mockScrollToEnd.mockClear();
+    const messages = [baseMessage(1, 'Hello'), baseMessage(2, 'World')];
+    const initialRender = render(
+      <MessageList
+        messages={messages}
+        currentUserId={2}
+        isLoading={false}
+        isError={false}
+        onRefresh={jest.fn()}
+      />
+    );
+    act(() => {
+      jest.runAllTimers();
+    });
+    expect(mockScrollToEnd).toHaveBeenCalledWith({ animated: false });
+
+    mockScrollToEnd.mockClear();
+    initialRender.unmount();
+
+    render(
+      <MessageList
+        messages={messages}
+        currentUserId={2}
+        isLoading={false}
+        isError={false}
+        onRefresh={jest.fn()}
+      />
+    );
+
+    act(() => {
+      jest.runAllTimers();
+    });
+    expect(mockScrollToEnd).toHaveBeenCalledWith({ animated: false });
+  });
+
   it('does not call scrollToEnd when user is not near bottom on new content', () => {
     mockScrollToEnd.mockClear();
     const { rerender, getByTestId } = render(
@@ -185,6 +211,14 @@ describe('MessageList', () => {
     });
     mockScrollToEnd.mockClear();
 
+    fireEvent.scroll(getByTestId('flat-list'), {
+      nativeEvent: {
+        contentOffset: { y: 0 },
+        layoutMeasurement: { height: 400, width: 300, x: 0, y: 0 },
+        contentSize: { height: 1000, width: 300 },
+      },
+    });
+
     const newMessages = [
       baseMessage(1, 'Hello'),
       baseMessage(2, 'World'),
@@ -198,14 +232,6 @@ describe('MessageList', () => {
         onRefresh={jest.fn()}
       />
     );
-
-    fireEvent.scroll(getByTestId('flat-list'), {
-      nativeEvent: {
-        contentOffset: { y: 0 },
-        layoutMeasurement: { height: 400, width: 300, x: 0, y: 0 },
-        contentSize: { height: 1000, width: 300 },
-      },
-    });
 
     act(() => {
       jest.runAllTimers();

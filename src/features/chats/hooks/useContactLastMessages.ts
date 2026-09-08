@@ -18,30 +18,26 @@ export const useContactLastMessages = (contactIds: number[]): ContactLastMessage
   const conversationMetadata = useConversationMetadata(contactIds);
 
   const ownQuery = useQuery({
-    queryKey: ['posts', { userId: CURRENT_USER_ID }],
+    queryKey: ['conversation', 'own'],
     queryFn: () => fetchPosts({ userId: CURRENT_USER_ID }),
     staleTime: 30_000,
     enabled: contactIds.length > 0,
   });
 
-  const latestOutgoingByContact = useMemo(() => {
+  const latestOutgoing = useMemo(() => {
     const ownPosts = ownQuery.data?.results ?? [];
-    const map = new Map<number, Post>();
-    for (let i = 0; i < ownPosts.length; i++) {
-      const post = ownPosts[i];
-      const existing = map.get(post.userId);
-      if (!existing || new Date(post.createdAt).getTime() > new Date(existing.createdAt).getTime()) {
-        map.set(post.userId, post);
-      }
-    }
-    return map;
+    if (ownPosts.length === 0) return null;
+    return ownPosts.reduce((latest, post) =>
+      new Date(post.createdAt).getTime() > new Date(latest.createdAt).getTime()
+        ? post
+        : latest
+    );
   }, [ownQuery.data?.results]);
 
   return useMemo(() => {
     return contactIds.map((contactId) => {
       const meta = conversationMetadata.get(contactId);
       const latestIncoming = meta?.lastIncoming ?? null;
-      const latestOutgoing = latestOutgoingByContact.get(contactId) ?? null;
 
       let message: Post | null = null;
       if (latestIncoming && latestOutgoing) {
@@ -64,5 +60,5 @@ export const useContactLastMessages = (contactIds: number[]): ContactLastMessage
         isError,
       };
     });
-  }, [contactIds, conversationMetadata, latestOutgoingByContact, ownQuery.isLoading, ownQuery.isError]);
+  }, [contactIds, conversationMetadata, latestOutgoing, ownQuery.isLoading, ownQuery.isError]);
 };

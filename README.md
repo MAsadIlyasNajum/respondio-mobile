@@ -52,13 +52,14 @@ The implementation focuses on more than simply rendering screens. The project se
 | Resource             | Link                                                                                |
 | -------------------- | ----------------------------------------------------------------------------------- |
 | **Source Code**      | [GitHub Repository](https://github.com/MAsadIlyasNajum/respondio-mobile)            |
+| **App Download**     | [Download Android APK](https://expo.dev/accounts/asad95/projects/respondio-mobile/builds/f358eb3a-a509-4c7e-bfc0-e9216d4eb728) |
 | **Release & APK**    | [GitHub Releases](https://github.com/MAsadIlyasNajum/respondio-mobile/releases)     |
 | **Version Tags**     | [GitHub Tags](https://github.com/MAsadIlyasNajum/respondio-mobile/tags)             |
 | **Milestone**        | [GitHub Milestones](https://github.com/MAsadIlyasNajum/respondio-mobile/milestones) |
 | **Project Tracking** | [GitHub Project](https://github.com/MAsadIlyasNajum/respondio-mobile/projects/4)    |
 | **API**              | [ResponseRift](https://responserift.dev/)                                           |
 
-> **APK:** The Android APK is included in the repository/release as required by the assessment.
+> **APK:** The Android application can be downloaded directly from the Expo build link above. No local build is required for evaluation.
 
 ---
 
@@ -1039,13 +1040,21 @@ This provides visibility into implementation progress and keeps the assessment w
 
 ---
 
-# Release
+# Release & Download
 
-The application release and APK are available through GitHub Releases:
+The application is available as a downloadable Android APK.
 
-**[View Releases](https://github.com/MAsadIlyasNajum/respondio-mobile/releases)**
+### 📱 Android APK
 
-Version tags are available here:
+**[Download / Install the App](https://expo.dev/accounts/asad95/projects/respondio-mobile/builds/f358eb3a-a509-4c7e-bfc0-e9216d4eb728)**
+
+The Expo build link provides direct access to the generated Android build. This is intended to make evaluation easier for reviewers and interviewers — no local React Native or Expo setup is required to try the application.
+
+### GitHub Release
+
+**[View GitHub Releases](https://github.com/MAsadIlyasNajum/respondio-mobile/releases)**
+
+### Version Tags
 
 **[View Tags](https://github.com/MAsadIlyasNajum/respondio-mobile/tags)**
 
