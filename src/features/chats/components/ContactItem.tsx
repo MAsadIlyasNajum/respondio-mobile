@@ -1,6 +1,7 @@
 import { memo, useMemo, useState, useRef, useCallback } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { spacing, useColors } from '@/theme';
+import { useFocusEffect } from 'expo-router';
 import Avatar from '@/components/Avatar';
 import AppText from '@/components/AppText';
 import { formatConversationTime } from '@/utils/format';
@@ -9,7 +10,7 @@ import type { Post } from '@/types/Post';
 
 interface ContactItemProps {
   user: User;
-  onPress: () => void | Promise<void>;
+  onPress: () => void;
   lastMessage?: Post | null;
   messageTimestamp?: string;
   messageStatus: 'loading' | 'error' | 'success';
@@ -20,14 +21,18 @@ function ContactItem({ user, onPress, lastMessage, messageTimestamp, messageStat
   const isNavigatingRef = useRef(false);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      isNavigatingRef.current = false;
+      setIsNavigating(false);
+    }, [])
+  );
+
   const handlePress = useCallback(() => {
     if (isNavigatingRef.current) return;
     isNavigatingRef.current = true;
     setIsNavigating(true);
-    Promise.resolve(onPress()).finally(() => {
-      isNavigatingRef.current = false;
-      setIsNavigating(false);
-    });
+    onPress();
   }, [onPress]);
   const styles = useMemo(
     () =>

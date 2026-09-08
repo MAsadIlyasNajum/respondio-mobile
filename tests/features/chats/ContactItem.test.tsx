@@ -1,9 +1,19 @@
 /// <reference types="jest" />
 
-import { act, render, screen, fireEvent } from '@testing-library/react-native';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import ContactItem from '@/features/chats/components/ContactItem';
 import type { User } from '@/types/User';
 import type { Post } from '@/types/Post';
+
+jest.mock('expo-router', () => {
+  let callback: (() => void) | undefined;
+  return {
+    useFocusEffect: jest.fn((cb) => {
+      callback = cb;
+    }),
+    getFocusEffectCallback: () => callback,
+  };
+});
 
 const baseUser = (id: number, name: string): User => ({
   id,
@@ -34,7 +44,7 @@ const basePost = (overrides: Partial<Post> & {
   return { ...post, ...overrides };
 };
 
-const noop = () => Promise.resolve();
+const noop = () => {};
 
 describe('ContactItem', () => {
   it('renders user name and avatar', () => {
@@ -120,8 +130,8 @@ describe('ContactItem', () => {
     expect(loadingIndicators.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('ignores rapid repeated presses while navigation is in flight', async () => {
-    const onPress = jest.fn(() => Promise.resolve());
+  it('ignores rapid repeated presses while navigation is in flight', () => {
+    const onPress = jest.fn();
     render(
       <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
     );
@@ -131,40 +141,49 @@ describe('ContactItem', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('re-enables contact after navigation completes', async () => {
-    let resolvePress = () => {};
-    const onPress = jest.fn(() => new Promise<void>((res) => { resolvePress = res; }));
-    render(
-      <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
-    );
-
-    fireEvent.press(screen.getByText('Alice'));
-    expect(onPress).toHaveBeenCalledTimes(1);
-
-    await act(async () => {
-      resolvePress();
-    });
-
-    fireEvent.press(screen.getByText('Alice'));
-    expect(onPress).toHaveBeenCalledTimes(2);
-  });
-
-  it('sets accessibilityState to disabled while navigating', async () => {
-    let resolvePress = () => {};
-    const onPress = jest.fn(() => new Promise<void>((res) => { resolvePress = res; }));
+  it('re-enables contact after screen regains focus', () => {
+    const onPress = jest.fn();
     render(
       <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
     );
 
     fireEvent.press(screen.getByLabelText('Chat with Alice'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+
+    const { getFocusEffectCallback } = require('expo-router');
+    const callback = getFocusEffectCallback();
+    if (callback) {
+      callback();
+    }
+
+    act(() => {});
+
+    fireEvent.press(screen.getByLabelText('Chat with Alice'));
+    expect(onPress).toHaveBeenCalledTimes(2);
+  });
+
+  it('sets accessibilityState to disabled while navigating', async () => {
+    const onPress = jest.fn();
+    render(
+      <ContactItem user={baseUser(1, 'Alice')} onPress={onPress} lastMessage={null} messageStatus="success" />
+    );
+
+    fireEvent.press(screen.getByLabelText('Chat with Alice'));
+    expect(onPress).toHaveBeenCalledTimes(1);
     let button = screen.getByLabelText('Chat with Alice');
     expect(button.props.accessibilityState.disabled).toBe(true);
 
-    await act(async () => {
-      resolvePress();
-    });
+    const { getFocusEffectCallback } = require('expo-router');
+    const callback = getFocusEffectCallback();
+    if (callback) {
+      callback();
+    }
 
-    button = screen.getByLabelText('Chat with Alice');
-    expect(button.props.accessibilityState.disabled).toBe(false);
+    act(() => {});
+
+    await waitFor(() => {
+      button = screen.getByLabelText('Chat with Alice');
+      expect(button.props.accessibilityState.disabled).toBe(false);
+    });
   });
 });

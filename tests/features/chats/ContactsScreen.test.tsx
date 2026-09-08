@@ -4,18 +4,24 @@ import { render, screen, fireEvent } from '@testing-library/react-native';
 import ChatsScreen from '@/app/(tabs)/index';
 import { useContacts } from '@/features/chats/hooks/useContacts';
 import { useContactLastMessages } from '@/features/chats/hooks/useContactLastMessages';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 jest.mock('@/features/chats/hooks/useContacts');
 jest.mock('@/features/chats/hooks/useContactLastMessages');
-jest.mock('expo-router');
+jest.mock('expo-router', () => ({
+  useRouter: jest.fn(),
+  useFocusEffect: jest.fn(),
+  useLocalSearchParams: jest.fn(),
+}));
 
 const mockedUseContacts = jest.mocked(useContacts);
 const mockedUseContactLastMessages = jest.mocked(useContactLastMessages);
 const mockPush = jest.fn();
+const focusEffects = new Set<() => void>();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  focusEffects.clear();
   jest.mocked(useRouter).mockReturnValue({
     push: mockPush,
     replace: jest.fn(),
@@ -23,6 +29,10 @@ beforeEach(() => {
     canGoBack: jest.fn(() => true),
   } as any);
   mockedUseContactLastMessages.mockReturnValue([]);
+  jest.mocked(useFocusEffect).mockImplementation((callback: () => void) => {
+    focusEffects.add(callback);
+    return () => focusEffects.delete(callback);
+  });
 });
 
 describe('ChatsScreen', () => {
@@ -150,9 +160,9 @@ describe('ChatsScreen', () => {
   });
 
   it('does not push duplicate chat routes on rapid repeated taps', async () => {
-    const mockPush = jest.fn(() => Promise.resolve());
+    const localMockPush = jest.fn();
     jest.mocked(useRouter).mockReturnValue({
-      push: mockPush,
+      push: localMockPush,
       replace: jest.fn(),
       back: jest.fn(),
       canGoBack: jest.fn(() => true),
@@ -179,8 +189,35 @@ describe('ChatsScreen', () => {
     fireEvent.press(screen.getByText('Alice'));
     fireEvent.press(screen.getByText('Alice'));
 
+    expect(localMockPush).toHaveBeenCalledTimes(1);
+    expect(localMockPush).toHaveBeenCalledWith('/chat/1');
+  });
+
+  it('allows re-navigation after screen regains focus', async () => {
+    const mockUsers = [
+      { id: 1, name: 'Alice', username: 'alice', email: 'a@b.com', avatar: '', phone: '', website: '', address: { street: '', city: '', zipcode: '' } },
+    ];
+
+    mockedUseContacts.mockReturnValue({
+      users: mockUsers,
+      isLoading: false,
+      isError: false,
+      isRefetching: false,
+      isFetchingNextPage: false,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      refetch: jest.fn(),
+    });
+
+    render(<ChatsScreen />);
+
+    fireEvent.press(screen.getByText('Alice'));
     expect(mockPush).toHaveBeenCalledTimes(1);
-    expect(mockPush).toHaveBeenCalledWith('/chat/1');
+
+    focusEffects.forEach((cb) => cb?.());
+
+    fireEvent.press(screen.getByText('Alice'));
+    expect(mockPush).toHaveBeenCalledTimes(2);
   });
 
   it('does not render blocked users', () => {

@@ -5,6 +5,10 @@ import { render, screen, fireEvent } from '@testing-library/react-native';
 import ContactList from '@/features/chats/components/ContactList';
 import type { User } from '@/types/User';
 
+jest.mock('expo-router', () => ({
+  useFocusEffect: jest.fn(),
+}));
+
 const baseUser = (id: number, name: string): User => ({
   id,
   name,
